@@ -1,18 +1,27 @@
 <h1 align="center" id="title">Online Pharmacy Portal</h1>
 
 <div align="center">
- <img src="./Preview/Screenshot 2024-10-10 at 1.02.21 PM.png" alt="Homepage" style="width: 80%;"/>
- <br>Homepage<br><br>
- <hr>
- <img src="./Preview/Screenshot 2024-10-10 at 1.02.40 PM.png" alt="Products Page" style="width: 80%;"/>
- <br>Products Page<br><br>
- <hr>
- <img src="./Preview/Screenshot 2024-10-10 at 1.03.00 PM.png" alt="Admin Dashboard" style="width: 80%;"/>
- <br>Admin Dashboard<br><br>
- <hr>
- <img src="./Preview/Screenshot 2024-10-10 at 1.03.12 PM.png" alt="Contact Us Page" style="width: 80%;"/>
- <br>Contact Us page<br><br>
- <hr>
+
+<img src="./Preview/homepage.png" alt="Homepage" style="width: 80%;"/>
+<br>Homepage<br><br>
+
+<hr>
+
+<img src="./Preview/products.png" alt="Products Page" style="width: 80%;"/>
+<br>Products Page<br><br>
+
+<hr>
+
+<img src="./Preview/admin-dashboard.png" alt="Admin Dashboard" style="width: 80%;"/>
+<br>Admin Dashboard<br><br>
+
+<hr>
+
+<img src="./Preview/contact.png" alt="Contact Us Page" style="width: 80%;"/>
+<br>Contact Us page<br><br>
+
+<hr>
+
 </div>
 
 # About the Project
@@ -21,9 +30,9 @@ The **Online Pharmacy Portal** is a web-based pharmacy management and online med
 
 The main purpose of the project is to provide an online platform where customers can browse medicines and pharmacy products, add products to their shopping cart, place orders, make payments, upload prescriptions, and track their orders.
 
-The system also provides separate dashboards and functionalities for **Administrators, Managers, Pharmacists, and Customers**.
+The system provides separate dashboards and functionalities for **Administrators, Managers, Pharmacists, and Customers**.
 
-The project includes database management using MySQL and automated browser testing using **Selenium WebDriver with Python and PyTest**.
+The project also includes database management using MySQL and automated browser testing using **Selenium WebDriver with Python and PyTest**.
 
 ## Project Objectives
 
@@ -115,7 +124,7 @@ Customer Registration/Login
           ↓
        Add to Cart
           ↓
-     Update Cart
+      Update Cart
           ↓
       Place Order
           ↓
@@ -206,9 +215,20 @@ onlinepharmacy/
 │   ├── Profile Pictures/
 │   └── Pharmacy X Icon.png
 │
+├── CSS/
+│
+├── JS/
+│
+├── Preview/
+│   ├── homepage.png
+│   ├── products.png
+│   ├── admin-dashboard.png
+│   ├── contact.png
+│   ├── Screenshot 2024-10-10 at 1.03.26 PM.png
+│   └── Screenshot 2024-10-10 at 1.03.42 PM.png
+│
 ├── tests/
 │   └── selenium/
-│       │
 │       ├── pages/
 │       │   ├── cart_page.py
 │       │   ├── order_page.py
@@ -229,10 +249,6 @@ onlinepharmacy/
 │
 ├── uploads/
 │
-├── CSS/
-├── JS/
-├── Preview/
-│
 ├── .gitignore
 ├── README.md
 │
@@ -240,23 +256,24 @@ onlinepharmacy/
 ├── login.php
 ├── logout.php
 ├── signin.php
+├── register.php
 │
-├── admin_DB.php
-├── admin_login.php
-├── admin_orders.php
-│
-├── manager_DB.php
-├── manager_login.php
-│
-├── pharmacist_DB.php
-├── pharmacist_login.php
+├── my_account.php
+├── profile.php
+├── contact.php
+├── privacyPolicy.php
+├── t&c.php
 │
 ├── products.php
 ├── product_details.php
+├── order_product.php
+│
 ├── cart.php
 ├── add_to_cart.php
 ├── remove_from_cart.php
 ├── update_cart.php
+├── plus.php
+├── minus.php
 │
 ├── paymentpage.php
 ├── my_orders.php
@@ -266,67 +283,110 @@ onlinepharmacy/
 ├── download_invoice.php
 │
 ├── prescription.php
+├── prescription_upload.php
 ├── upload_prescription.php
+├── update_prescription.php
+├── view_prescriptions.php
+├── prescription_status.php
 │
-├── contact.php
-├── profile.php
+├── admin_login.php
+├── admin_DB.php
+├── admin_orders.php
+├── manage_users.php
+│
+├── manager_login.php
+├── manager_DB.php
+├── manage_orders.php
+├── update_order.php
+├── update_order_status.php
+├── view_orders.php
+├── reject_order.php
+│
+├── pharmacist_login.php
+├── pharmacist_DB.php
+├── pharmacist_dashboard.php
+├── pharmacist_medicines.php
+├── pharmacist_prescriptions.php
 │
 └── Other PHP application files
 ```
 
 # Project Structure Description
 
-| File/Folder | Description |
+| File / Folder | Description |
 |---|---|
-| `Database/` | Contains the MySQL database SQL file and database-related information |
-| `Database/PharmacyX_DB.sql` | SQL dump containing the database structure and data required for the application |
-| `db_Config/` | Contains database connection configuration |
-| `db_Config/config.php` | Handles the connection between PHP and MySQL |
-| `Images/` | Contains application images |
-| `Images/Product Images/` | Contains product images |
-| `Images/Profile Pictures/` | Contains profile-related images |
-| `CSS/` | Contains CSS files used for website design and styling |
-| `JS/` | Contains JavaScript files used for client-side functionality |
-| `Preview/` | Contains screenshots displayed in the README |
-| `uploads/` | Directory used for uploaded application files |
+| `Database/` | Contains database-related files |
+| `Database/PharmacyX_DB.sql` | SQL file containing the MySQL database structure and data |
+| `Database/db.txt` | Contains database-related information |
+| `db_Config/` | Contains database configuration files |
+| `db_Config/config.php` | Establishes the PHP–MySQL database connection |
+| `Images/` | Stores images used throughout the application |
+| `Images/Product Images/` | Contains pharmacy product images |
+| `Images/Profile Pictures/` | Contains user profile images |
+| `CSS/` | Contains CSS files for website styling |
+| `JS/` | Contains JavaScript files for client-side functionality |
+| `Preview/` | Contains screenshots used to demonstrate the application |
+| `uploads/` | Directory used for application file uploads |
 | `tests/selenium/` | Contains automated Selenium test cases |
 | `tests/selenium/pages/` | Contains Page Object Model classes for different application pages |
-| `conftest.py` | Contains common PyTest/Selenium configuration and fixtures |
+| `tests/selenium/conftest.py` | Contains common PyTest fixtures and Selenium configuration |
 | `test_home.py` | Tests homepage functionality |
 | `test_signin.py` | Tests sign-in and authentication functionality |
-| `test_products.py` | Tests product-related functionality |
+| `test_products.py` | Tests product functionality |
 | `test_cart.py` | Tests shopping cart functionality |
-| `test_order.py` | Tests order-related functionality |
+| `test_order.py` | Tests order functionality |
 | `test_payment.py` | Tests payment functionality |
 | `reports/` | Contains Selenium test reports |
-| `final_selenium_report.html` | Final Selenium execution report |
-| `index.php` | Main homepage of the application |
+| `reports/final_selenium_report.html` | Final Selenium HTML test report |
+| `index.php` | Main homepage of the Online Pharmacy Portal |
 | `login.php` | Customer login page |
-| `signin.php` | Customer registration/sign-in page |
+| `signin.php` | Customer sign-in functionality |
+| `register.php` | Handles customer registration |
 | `logout.php` | Handles user logout |
-| `products.php` | Displays pharmacy products |
-| `product_details.php` | Displays individual product information |
-| `cart.php` | Displays and manages the shopping cart |
-| `add_to_cart.php` | Adds products to the customer cart |
-| `remove_from_cart.php` | Removes products from the cart |
-| `update_cart.php` | Updates cart quantities |
-| `paymentpage.php` | Handles the payment page |
+| `my_account.php` | Provides customer account functionality |
+| `profile.php` | Allows customers to manage their profile |
+| `contact.php` | Provides the Contact Us functionality |
+| `privacyPolicy.php` | Displays the privacy policy |
+| `t&c.php` | Displays the terms and conditions |
+| `products.php` | Displays available pharmacy products |
+| `product_details.php` | Displays detailed information about a product |
+| `order_product.php` | Handles product ordering functionality |
+| `cart.php` | Displays and manages the customer's shopping cart |
+| `add_to_cart.php` | Adds products to the shopping cart |
+| `remove_from_cart.php` | Removes products from the shopping cart |
+| `update_cart.php` | Updates shopping cart information |
+| `plus.php` | Handles increasing cart quantity |
+| `minus.php` | Handles decreasing cart quantity |
+| `paymentpage.php` | Provides the payment interface |
 | `my_orders.php` | Displays customer orders |
 | `track_order.php` | Provides order tracking |
 | `cancel_order.php` | Handles order cancellation |
 | `invoice.php` | Displays order invoice |
-| `download_invoice.php` | Provides invoice download functionality |
-| `prescription.php` | Handles prescription-related functionality |
-| `upload_prescription.php` | Handles prescription uploads |
-| `contact.php` | Contact Us page |
-| `profile.php` | Customer profile management |
-| `admin_login.php` | Admin authentication |
-| `admin_DB.php` | Admin-related database operations |
-| `admin_orders.php` | Admin order management |
-| `manager_login.php` | Manager authentication |
-| `manager_DB.php` | Manager-related database operations |
-| `pharmacist_login.php` | Pharmacist authentication |
-| `pharmacist_DB.php` | Pharmacist-related database operations |
+| `download_invoice.php` | Provides invoice downloading |
+| `prescription.php` | Provides prescription-related functionality |
+| `prescription_upload.php` | Handles prescription upload functionality |
+| `upload_prescription.php` | Processes uploaded prescriptions |
+| `update_prescription.php` | Updates prescription information |
+| `view_prescriptions.php` | Displays prescription information |
+| `prescription_status.php` | Handles prescription status |
+| `admin_login.php` | Provides administrator authentication |
+| `admin_DB.php` | Handles administrator-related database operations |
+| `admin_orders.php` | Provides administrator order management |
+| `manage_users.php` | Provides user management functionality |
+| `manager_login.php` | Provides manager authentication |
+| `manager_DB.php` | Handles manager-related database operations |
+| `manage_orders.php` | Provides order management functionality |
+| `update_order.php` | Updates order information |
+| `update_order_status.php` | Updates order status |
+| `view_orders.php` | Displays orders for management |
+| `reject_order.php` | Handles order rejection |
+| `pharmacist_login.php` | Provides pharmacist authentication |
+| `pharmacist_DB.php` | Handles pharmacist-related database operations |
+| `pharmacist_dashboard.php` | Pharmacist dashboard |
+| `pharmacist_medicines.php` | Provides pharmacist medicine management |
+| `pharmacist_prescriptions.php` | Provides pharmacist prescription management |
+| `.gitignore` | Specifies files and folders that should not be committed to Git |
+| `README.md` | Main project documentation |
 
 # Authentication and User Roles
 
@@ -501,7 +561,7 @@ Configure the database connection according to the local MySQL setup.
 
 ## Step 6: Open the Application
 
-Open the following URL in a browser:
+Open the following URL:
 
 ```text
 http://localhost/onlinepharmacy/
@@ -591,3 +651,11 @@ Possible future improvements include:
 - Enhanced reporting and analytics
 - Responsive design improvements
 - Additional automated test coverage
+
+# Contributors
+
+[**Moditha Marasingha**](https://github.com/ModithaM) | 
+[**Hasindu Chanuka**](https://github.com/hasindu1998) | 
+[**Kulanya Lisaldi**](https://github.com/KulanyaLisaldi) | 
+[**Deshan**](https://github.com/Deshan-z) | 
+[**Medhani**](https://github.com/PabodaWA)

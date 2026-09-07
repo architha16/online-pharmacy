@@ -1,0 +1,30 @@
+﻿# Python virtual environment
+venv/
+
+# Environment variables and secrets
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Pytest cache
+.pytest_cache/
+
+# Selenium screenshots
+tests/selenium/screenshots/
+
+# Selenium temporary files
+tests/selenium/reports/*.tmp
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project backup/archive
+project.zip
+
+uploads/

@@ -1,0 +1,48 @@
+.container1
+{
+    width: 1300px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 50px;
+    margin-bottom: 60px;
+}
+
+.table_container
+{
+    margin-top: 20px;
+}
+
+.table_container table
+{
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.table_container table th
+{
+    background-color: #3497c2; /*#b9b8b8*/
+    color: white;
+    font-size: 19px;
+    padding: 10px;
+}
+
+.table_container table tr
+{
+    border-bottom: 2px solid #f2f2f2;
+}
+
+.table_container table tr:nth-child(odd)
+{
+    background-color: #f2f2f2;
+}
+
+.table_container table tr td
+{
+    padding: 20px;
+}
+
+.status
+{
+    color: rgb(0, 184, 0);
+}

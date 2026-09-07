@@ -1,0 +1,129 @@
+CREATE TABLE User_info (
+    user_name VARCHAR(100) PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    profilepic_url VARCHAR(255),
+    acc_status ENUM('Active', 'Inactive') DEFAULT 'Active',
+    user_type ENUM('Admin', 'Manager', 'Customer')
+);
+
+CREATE TABLE Admin (
+    admin_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_name VARCHAR(100),
+    FOREIGN KEY (user_name) REFERENCES User_info(user_name)
+);
+
+CREATE TABLE Customer (
+    customer_id INT PRIMARY KEY AUTO_INCREMENT,
+    contact_no VARCHAR(15),
+    user_name VARCHAR(100),
+    FOREIGN KEY (user_name) REFERENCES User_info(user_name)
+);
+
+CREATE TABLE Manager (
+    manager_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_name VARCHAR(100),
+    FOREIGN KEY (user_name) REFERENCES User_info(user_name)
+);
+
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_name VARCHAR(100),
+    order_status ENUM('Pending', 'Shipped', 'Delivered') DEFAULT 'Pending',
+    order_type ENUM('Prescription', 'General'),
+    qty INT,
+    receiver_name VARCHAR(255),
+    street VARCHAR(100),
+    city VARCHAR(100),
+    postal_code VARCHAR(10),
+    prescription_url VARCHAR(255),
+    Order_total DECIMAL(10, 2),
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_name) REFERENCES User_info(user_name),
+    FOREIGN KEY (product_id) REFERENCES Products(product_id)
+);
+
+CREATE TABLE Payment (
+    payment_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT,
+    amount DECIMAL(10, 2),
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    receipt_url VARCHAR(255),
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id)
+);
+
+CREATE TABLE Products (
+    product_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_name VARCHAR(255) NOT NULL,
+    product_description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    stock_quantity INT NOT NULL,
+    image_url VARCHAR(255)
+);
+
+CREATE TABLE Messages (
+    message_id INT PRIMARY KEY AUTO_INCREMENT,
+    message_text TEXT NOT NULL,
+    contact_no VARCHAR(15),
+    email VARCHAR(255) NOT NULL,
+    Uploads_url VARCHAR(255),
+    response_text TEXT,
+    message_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+INSERT INTO User_info (user_name, first_name, last_name, email, password, profilepic_url, acc_status, user_type)
+VALUES 
+('admin01', 'Moditha', 'Marasingha', 'moditha2003@gmail.com', 'mod123', '/images/admin01.jpg', 'Active', 'Admin'),
+('manager01', 'Hasindu', 'Sankalpa', 'sam.wilson@pharmacyx.com', 'managerPass02', '/images/managerSam.jpg', 'Active', 'Manager'),
+('user01', 'Kulanya', 'Lisaldi', 'alice.johnson@gmail.com', 'userPass01', '/images/userAlice.jpg', 'Active', 'Customer'),
+('user02', 'Deshan', 'GGD', 'bob.williams@gmail.com', 'userPass02', '/images/userBob.jpg', 'Inactive', 'Customer'),
+('manager02', 'Medhani', 'test', 'kate.brown@pharmacyx.com', 'managerPass03', '/images/managerKate.jpg', 'Active', 'Manager');
+
+INSERT INTO Admin (user_name)
+VALUES ('admin01');
+
+INSERT INTO Orders (user_name, order_status, order_type, qty, receiver_name, street, city, postal_code, prescription_url)
+VALUES 
+('user01', 'Pending', 'Prescription', 2, 'Kulanya Lisaldi', '123 Galle Road', 'Colombo', '00100', 'prescription1.pdf'),
+('user01', 'Shipped', 'General', 1, 'Kulanya Lisaldi', '456 Marine Drive', 'Galle', '80000', NULL),
+('user01', 'Delivered', 'Prescription', 3, 'Kulanya Lisaldi', '789 Kandy Street', 'Kandy', '20000', 'prescription2.pdf'),
+
+('user02', 'Pending', 'General', 4, 'Deshan GGD', '25 Temple Road', 'Negombo', '11500', NULL),
+('user02', 'Shipped', 'Prescription', 2, 'Deshan GGD', '18 Beach Road', 'Matara', '81000', 'prescription3.pdf');
+
+
+INSERT INTO Payment (order_id, amount, payment_date, receipt_url)
+VALUES
+(1, 1500.00, '2024-09-15 10:30:00', 'receipt1.pdf'),
+(2, 750.00, '2024-09-14 09:15:00', 'receipt2.pdf'),
+(3, 3000.00, '2024-09-13 14:45:00', 'receipt3.pdf'),
+(4, 1000.00, '2024-09-15 11:20:00', 'receipt4.pdf'),
+(5, 2000.00, '2024-09-14 08:30:00', 'receipt5.pdf');
+
+INSERT INTO Products (product_name, product_description, price, stock_quantity, image_url)
+VALUES
+('Paracetamol', 'Effective pain relief for headaches and fever. 500mg tablets.', 150.00, 100, 'paracetamol.jpg'),
+('Amoxicillin', 'Antibiotic used to treat bacterial infections. 250mg capsules.', 600.00, 50, 'amoxicillin.jpg'),
+('Vitamin C Tablets', 'Boost your immune system with Vitamin C. 1000mg tablets.', 200.00, 200, 'vitamin_c.jpg'),
+('Digital Blood Pressure Monitor', 'Accurate and easy-to-use blood pressure monitor.', 4500.00, 30, 'blood_pressure_monitor.jpg'),
+('Insulin Syringe', 'Disposable insulin syringes with fine needles.', 50.00, 500, 'insulin_syringe.jpg');
+
+
+
+INSERT INTO Messages (message_text, contact_no, email, Uploads_url, response_text)
+VALUES
+('I want to know the availability of Paracetamol.', '0771234567', 'kulanya.lisaldi@gmail.com', NULL, NULL),
+('Here is my prescription for the required medicines.', '0777654321', 'deshan.ggd@gmail.com', 'prescription1.pdf', NULL),
+('Can I get a discount on my next purchase?', '0712345678', 'john.doe@gmail.com', NULL, 'Yes, we are currently offering a 10% discount on all items.'),
+('I have attached my prescription for review. Please let me know the price.', '0771122334', 'alice.johnson@gmail.com', 'prescription2.pdf', 'The total price is LKR 3,500.'),
+('What is the return policy for damaged products?', '0781234567', 'bob.williams@gmail.com', NULL, NULL),
+('Can I change my delivery address after placing an order?', '0769876543', 'kate.brown@gmail.com', NULL, 'Yes, you can change your address within 24 hours of placing the order.'),
+('Here is my lab report for the requested medicines.', '0753344556', 'sithara.dilshan@gmail.com', 'lab_report.pdf', NULL),
+('Do you have insulin in stock?', '0742233445', 'nimal.fernando@gmail.com', NULL, NULL),
+('How long does delivery take to Colombo?', '0719988776', 'reshan.perera@gmail.com', NULL, 'Deliveries to Colombo usually take 1-2 business days.'),
+('I have attached my prescription. Please let me know if all items are available.', '0774455667', 'danushi.samarasinghe@gmail.com', 'prescription3.pdf', 'All items are available. The total cost is LKR 5,200.');
+

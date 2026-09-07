@@ -1,0 +1,39 @@
+.privacy-policy-flex-container{
+  display: flex;
+  justify-content: center;
+}
+
+.privacy-policy-container{
+  width: 50%;
+}
+
+.policy-heading-container{
+  display: flex;
+  justify-content: center;
+}
+
+.privacy-policy-heading{
+  margin-bottom: 15px;
+  margin-top: 15px;
+  font-size: 35px;
+}
+
+.policy-heading,
+.policy-content{
+  margin-bottom: 15px;
+}
+
+.policy-heading{
+  font-size: 25px;
+}
+
+.policy-content{
+  font-size: 19px;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.bold-text{
+  font-size: 20px;
+  
+}

@@ -1,0 +1,337 @@
+*
+{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Roboto";
+}
+
+.Container1
+{
+    width: 1300px;
+    height : 285px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 50px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.user_box
+{
+    width: 550px;
+    height: 270px;
+}
+
+.user_content
+{
+    border: 2px solid black;
+    margin-top: 15px;
+    width: 550px;
+    height: 225px;
+    border-style: none;
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    padding: 20px 50px 40px 50px;
+}
+
+.check-users form
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.check-user-input
+{
+    font-size: 17px;
+    padding: 8px 25px 8px 10px;
+    border-radius: 5px;
+    border-style: none;
+    width: 300px;
+    height: 50px;
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.check-user-button
+{
+    border-style: solid;
+    border-color: #0098DA;
+    border-radius: 5px;
+    background-color: #0098DA;
+    color: white;
+    font-size: 17px;
+    padding: 10px 30px 10px 30px;
+    margin-left: 20px;
+    transition: 0.5s;
+}
+
+.check-user-button:hover
+{
+    background-color: #0079B8;
+}
+
+.user-satus-container
+{
+    display: flex;
+    align-items: center;
+    margin-top: 22px;
+}
+
+.user-status
+{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: rgb(0, 184, 0);
+    padding: 8px 25px 8px 10px;
+    border-radius: 5px;
+    border-style: none;
+    width: 150px;
+    height: 50px;
+    margin-left: 30px;
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.user-control-buttons
+{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.action_btn, .delete
+{
+  border-style: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 17px;
+  padding: 12px 30px 12px 30px;
+  transition: 0.5s;
+}
+
+.bg
+{
+    background-color: #0098DA;
+}
+
+.delete
+{
+    background-color: rgb(238, 0, 0);
+}
+  
+.delete:hover
+{
+    background-color: rgb(187, 0, 0);
+}
+  
+.action_btn:hover
+{
+    background-color: #0079B8;
+}
+  
+
+.stat_box
+{
+    width: 650px;
+    height: 270px;
+}
+
+.stat_content
+{
+    margin-top: 15px;
+    width: 650px;
+    height: 225px;
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    padding: 40px 50px 40px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.stat_value
+{
+    font-size: 20px;
+    font-weight: 700;
+    color: rgb(0, 184, 0);
+    padding: 8px 20px 8px 20px;
+    border-radius: 5px;
+    border-style: none;
+    margin-left: 40px;
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    text-align: center;
+}
+
+.Container2
+{
+    width: 1300px;
+    height : 410px;
+    margin: 30px auto 30px auto;
+}
+
+.order_content
+{
+    margin-top: 15px;
+    height: 350px;
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    padding: 20px 20px 20px 20px;
+    overflow: scroll;
+}
+
+.message_content
+{
+    margin-top: 15px;
+    height: 350px;
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    padding: 20px 20px 20px 20px;
+    overflow: scroll;
+}
+
+hr.order_hr
+{
+    border: 2px solid black;
+    width: 1300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.manage_product
+{
+    margin: 30px auto 30px auto;
+    width: 300px;
+}
+
+.order_content table
+{
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.order_content table tr
+{
+    border-bottom: 2px solid #f2f2f2;
+}
+
+.order_content table tr:nth-child(odd)
+{
+    background-color: #f2f2f2;
+}
+
+.order_content table tr td
+{
+    padding-top: 25px;
+    padding-bottom: 25px;
+}
+
+.ordertb_title 
+{
+    font-weight: 900;
+}
+
+.shipped_box
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.shipped_box input
+{
+    margin-left: 10px;
+    background-color: #0098DA;
+    color: white;
+    padding: 4px;
+    border: none;
+    border-radius: 5px;
+}
+
+.shipped_box input:hover
+{
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+.disable_box input
+{
+    margin-left: 10px;
+    background-color: #8ed0ec;
+    color: white;
+    padding: 4px;
+    border: none;
+    border-radius: 5px;
+}
+
+.order_stat_row
+{
+    color: rgb(0, 184, 0);
+}
+
+.message_content table
+{
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.message_content table tr
+{
+    border-bottom: 2px solid #f2f2f2;
+}
+
+.message_content table tr th
+{
+    background-color: #5bb3d9;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+.message_content table tr td
+{
+    padding-top: 25px;
+    padding-bottom: 25px;
+}
+
+.message_content table tr:nth-child(even)
+{
+    background-color: #f2f2f2;
+}
+
+input.Reply_in 
+{
+    width: 190px;
+    height: 30px;
+    padding: 2px;
+}
+
+button.Submit_rply
+{
+    height: 30px;
+    padding: 5px;
+    border: none;
+    border-radius: 10px;
+    background-color: #0098DA;
+    color: aliceblue;
+}
+
+button.Delete_rply
+{
+    height: 30px;
+    padding: 5px;
+    background-color: rgb(238, 0, 0);
+    border: none;
+    border-radius: 10px;
+    color: aliceblue;
+}
+
+button.Submit_rply:hover
+{
+    background-color: #0079B8;
+}
+
+button.Delete_rply:hover
+{
+    background-color: rgb(187, 0, 0);
+}

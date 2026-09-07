@@ -1,0 +1,392 @@
+/* Sankalpa M M G H C
+   IT23538832 */
+
+
+/* =========================
+   MAIN IMAGE / HERO SECTION
+========================= */
+
+.main-image-container{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.main-heading{
+  color: #464646;
+  font-size: 55px;
+  font-weight: 500;
+  z-index: 1;
+  width: 100%;
+  margin-top: 240px;
+  margin-left: 45px;
+}
+
+.main-heading-button{
+  padding: 20px 30px;
+  margin-top: 40px;
+  border-style: solid;
+  border-radius: 50px;
+  background-color: #fff;
+  color: #0098DA;
+  border-color: #0098DA;
+  font-size: 25px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.5s;
+  margin-left: 45px;
+}
+
+.main-heading-button:hover{
+  background-color: #0098DA;
+  color: #fff;
+}
+
+#main-image{
+  height: 820px;
+  width: 1000px;
+  object-fit: contain;
+  object-position: right;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  animation: fadeIn 1s forwards;
+}
+
+.main-image:active{
+  opacity: 1;
+  animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+
+/* =========================
+   PRODUCTS HEADING
+========================= */
+
+.products-heading-container{
+  display: flex;
+  justify-content: center;
+}
+
+.product-heading{
+  font-size: 50px;
+  font-weight: 700;
+  margin-top: 15px;
+  margin-bottom: 25px;
+  color: #464646;
+}
+
+
+/* =========================
+   PRODUCTS GRID
+========================= */
+
+.product-content-container{
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 30px;
+
+  margin-left: 80px;
+  margin-right: 80px;
+  margin-bottom: 40px;
+}
+
+
+/* =========================
+   PRODUCT CARD
+========================= */
+
+.products-container{
+  display: flex;
+  flex-direction: column;
+
+  background-color: white;
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.19);
+
+  width: 100%;
+
+  padding: 20px;
+
+  margin: 0;
+
+  border-radius: 8px;
+
+  transition: 0.4s;
+}
+
+.products-container:hover{
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+
+  transform: translateY(-8px);
+}
+
+
+/* =========================
+   PRODUCT IMAGE
+========================= */
+
+.product-image-container{
+  margin-bottom: 12px;
+
+  padding: 8px;
+
+  text-align: center;
+}
+
+.item-image{
+  width: 200px;
+  height: 200px;
+
+  object-fit: contain;
+
+  max-width: 100%;
+}
+
+
+/* =========================
+   PRODUCT DETAILS
+========================= */
+
+.item-details{
+  display: flex;
+  flex-direction: column;
+}
+
+.product-details-container{
+  display: flex;
+  flex-direction: column;
+}
+
+.item-name{
+  font-weight: 500;
+
+  font-size: 25px;
+
+  margin-bottom: 12px;
+}
+
+.product-discription{
+  text-justify: inter-word;
+
+  font-size: 16px;
+
+  margin-bottom: 12px;
+
+  min-height: 45px;
+}
+
+.item-price{
+  font-weight: 500;
+
+  font-size: 18px;
+
+  margin-bottom: 15px;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.item-buynow-button{
+  padding: 10px 15px;
+
+  border-style: none;
+
+  border-radius: 5px;
+
+  background-color: #0098DA;
+
+  color: #fff;
+
+  font-size: 18px;
+
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: 0.5s;
+
+  width: 100%;
+}
+
+.item-buynow-button:hover{
+  background-color: #0079B8;
+}
+
+
+/* ==================================================
+   ADD TO CART + BUY NOW
+   SIDE BY SIDE
+================================================== */
+
+.product-buttons{
+  display: flex !important;
+
+  flex-direction: row !important;
+
+  align-items: stretch !important;
+
+  justify-content: space-between !important;
+
+  gap: 10px !important;
+
+  width: 100% !important;
+}
+
+
+/* Each form takes half of the available width */
+
+.product-buttons form{
+  display: block !important;
+
+  flex: 1 1 0 !important;
+
+  width: 50% !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+}
+
+
+/* Buttons fill their form */
+
+.product-buttons .item-buynow-button{
+  display: block !important;
+
+  width: 100% !important;
+
+  margin: 0 !important;
+
+  padding: 10px 8px !important;
+
+  font-size: 15px !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* =========================
+   ADD TO CART BUTTON
+========================= */
+
+.product-buttons .cart-button{
+  background-color: #0098DA;
+}
+
+.product-buttons .cart-button:hover{
+  background-color: #0079B8;
+}
+
+
+/* =========================
+   BUY NOW BUTTON
+========================= */
+
+.product-buttons .buy-button{
+  background-color: #28a745;
+}
+
+.product-buttons .buy-button:hover{
+  background-color: #218838;
+}
+
+
+/* =========================
+   TABLET
+========================= */
+
+@media screen and (max-width: 1000px){
+
+  .product-content-container{
+    grid-template-columns: repeat(2, 1fr);
+
+    margin-left: 40px;
+    margin-right: 40px;
+  }
+
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media screen and (max-width: 650px){
+
+  .product-content-container{
+    grid-template-columns: 1fr;
+
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .main-heading{
+    font-size: 35px;
+
+    margin-top: 100px;
+
+    margin-left: 20px;
+  }
+
+  .main-heading-button{
+    margin-left: 20px;
+
+    font-size: 18px;
+
+    padding: 12px 20px;
+  }
+
+  #main-image{
+    width: 100%;
+
+    height: auto;
+  }
+
+
+  /* Keep buttons side by side on mobile too */
+
+  .product-buttons{
+    display: flex !important;
+
+    flex-direction: row !important;
+
+    gap: 6px !important;
+  }
+
+  .product-buttons form{
+    width: 50% !important;
+
+    flex: 1 1 0 !important;
+  }
+
+  .product-buttons .item-buynow-button{
+    font-size: 13px !important;
+
+    padding: 9px 4px !important;
+  }
+
+}

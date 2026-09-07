@@ -1,0 +1,145 @@
+*
+{
+  font-family: "Roboto";
+}
+
+.container-top{
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  padding-top: 100px;
+}
+.main-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  padding: 10px 50px;
+  border-radius: 15px;
+}
+.login-image-container{
+  margin-right: 30px;
+}
+
+.login-image{
+  height: 700px;
+}
+
+.login-container{
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+}
+
+.login-container{
+  margin-left: 30px;
+}
+
+
+.login-heading{
+  font-size: 30px;
+}
+
+.login-inputs-box{
+  display: flex;
+  flex-direction: column;
+}
+
+.username-box{
+  font-size: 20px;
+  padding: 15px;
+  width: 350px;
+  margin-bottom: 30px;
+}
+
+.special-tasks{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+}
+
+.remember-me{
+  display: flex;
+}
+
+.remember-me-content{
+  font-weight: lighter;
+}
+
+.login-button-container,
+.signup-button-container{
+  display: flex;
+  justify-content: center;
+}
+
+.login-button,
+.signup-button{
+  font-size: 20px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  width: 390px;
+  background-color: #0098DA;
+  color: white;
+  font-weight: bold;
+  transition: 0.4s;
+  cursor: pointer;
+  border-radius: 8px;
+  border: none;
+}
+
+.login-button:hover{
+  background-color: #066a95;
+}
+
+.signup-button{
+  background-color: white;
+  color: #0098DA;
+  text-align: center;
+  text-decoration: none;
+  border-style: solid;
+  font-family: Arial;
+  border-color: #0098DA;
+}
+.signup-button:hover{
+  background-color: #0098DA;
+  color: white;
+}
+
+.signup-heading{
+  font-weight: lighter;
+}
+
+.signup-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pages-container{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.middle-section{
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+.page-links,
+.forgot-password{
+  text-decoration: none;
+}
+
+.error
+{
+  color: red;
+  font-size: 16px;
+}

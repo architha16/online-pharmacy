@@ -52,6 +52,21 @@ $isBuyNow = ($checkoutMode === 'buy_now');
 
 
 /* =========================================================
+   APPROVED PRESCRIPTION ID FROM MY ORDERS
+   =========================================================
+   My Orders may send the exact approved prescription ID.
+   Validate it against the logged-in customer and product
+   before using it for this checkout.
+   ========================================================= */
+
+$requestedPrescriptionId = (int)(
+    $_POST['prescription_id']
+    ?? $_GET['prescription_id']
+    ?? 0
+);
+
+
+/* =========================================================
    NEW CHECKOUT PRESCRIPTION SESSION
    =========================================================
    IMPORTANT:
@@ -140,6 +155,60 @@ if (!isset($_SESSION['PHARMACYX_CURRENT_PRESCRIPTION_IDS'])) {
 }
 
 $currentPrescriptionIds = $_SESSION['PHARMACYX_CURRENT_PRESCRIPTION_IDS'];
+
+
+/* =========================================================
+   RESTORE EXACT APPROVED PRESCRIPTION FROM MY ORDERS
+   ========================================================= */
+
+if ($requestedPrescriptionId > 0) {
+
+    $requestedPrescriptionQuery = mysqli_query(
+        $Connection,
+        "SELECT id, product_id, status, prescription_file
+         FROM prescriptions
+         WHERE id='$requestedPrescriptionId'
+           AND user_name='$userEscaped'
+         LIMIT 1"
+    );
+
+    if (
+        $requestedPrescriptionQuery &&
+        mysqli_num_rows($requestedPrescriptionQuery) > 0
+    ) {
+
+        $requestedPrescription =
+            mysqli_fetch_assoc($requestedPrescriptionQuery);
+
+        if ($requestedPrescription['status'] === 'Approved') {
+
+            $requestedPrescriptionProductId =
+                (int)$requestedPrescription['product_id'];
+
+            /* Do not reuse an already paid prescription. */
+            $paidPrescriptionQuery = mysqli_query(
+                $Connection,
+                "SELECT order_id
+                 FROM orders
+                 WHERE prescription_id='$requestedPrescriptionId'
+                 LIMIT 1"
+            );
+
+            if (
+                !$paidPrescriptionQuery ||
+                mysqli_num_rows($paidPrescriptionQuery) === 0
+            ) {
+
+                $_SESSION['PHARMACYX_CURRENT_PRESCRIPTION_IDS'][
+                    $requestedPrescriptionProductId
+                ] = $requestedPrescriptionId;
+
+                $currentPrescriptionIds =
+                    $_SESSION['PHARMACYX_CURRENT_PRESCRIPTION_IDS'];
+            }
+        }
+    }
+}
 
 
 /* =========================================================
@@ -2808,6 +2877,18 @@ if ($isBuyNow) {
         echo (int)$productId;
     ?>"
 >
+
+<?php if ($requestedPrescriptionId > 0): ?>
+
+<input
+    type="hidden"
+    name="prescription_id"
+    value="<?php
+        echo (int)$requestedPrescriptionId;
+    ?>"
+>
+
+<?php endif; ?>
 
 <input
     type="hidden"

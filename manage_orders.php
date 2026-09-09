@@ -1595,8 +1595,24 @@ body.dark-mode .period-btn.active { background:#087df5; color:#fff; }
                             'image' =>
                                 $order['image_url'] ?? '',
 
-                            'prescription' =>
-                                $order['prescription_url'] ?? ''
+                            /*
+                             * Prescription files are physically stored in
+                             * ./uploads/ by the customer upload workflow.
+                             *
+                             * The database stores the filename, so always
+                             * build the browser URL here. This prevents the
+                             * browser from requesting:
+                             *   /onlinepharmacy/filename.jpg
+                             * instead of:
+                             *   /onlinepharmacy/uploads/filename.jpg
+                             */
+                            'prescription' => (
+                                !empty($order['prescription_url'])
+                                ? './uploads/' . basename(
+                                    trim((string)$order['prescription_url'])
+                                )
+                                : ''
+                            )
                         ];
 
                     ?>

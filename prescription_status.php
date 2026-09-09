@@ -93,15 +93,16 @@ if (
         $approvedProductId => $prescriptionId
     ];
 
-    /* Start a fresh checkout. */
+    /* Continue the EXISTING approved prescription checkout.
+       Do NOT send new_checkout=1 here, because paymentpage.php
+       would clear the exact approved prescription ID from the session. */
     $_SESSION['PHARMACYX_PRESCRIPTION_CHECKOUT_START'] = date('Y-m-d H:i:s');
 
     header(
         "Location: paymentpage.php" .
         "?checkout_mode=buy_now" .
         "&product_id=" . $approvedProductId .
-        "&quantity=1" .
-        "&new_checkout=1"
+        "&quantity=1"
     );
     exit();
 }

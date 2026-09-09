@@ -89,6 +89,67 @@ if ($adminLoggedIn) {
     session_start();
 }
 
+
+/*
+====================================================
+ADMIN + MANAGER ORDER STATUS UPDATE
+====================================================
+Both Admin and Manager are allowed to update order
+status from this page.
+====================================================
+*/
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST' &&
+    isset($_POST['update_order_status'])
+) {
+
+    $updateOrderId = (int)($_POST['order_id'] ?? 0);
+    $updateStatus = trim($_POST['order_status'] ?? '');
+
+    $allowedStatuses = [
+        'Pending',
+        'Accepted',
+        'Packed',
+        'Out for Delivery',
+        'Shipped',
+        'Delivered',
+        'Rejected',
+        'Cancelled'
+    ];
+
+    if ($updateOrderId <= 0) {
+        die("Invalid Order ID.");
+    }
+
+    if (!in_array($updateStatus, $allowedStatuses, true)) {
+        die("Invalid order status.");
+    }
+
+    $statusEscaped = mysqli_real_escape_string(
+        $Connection,
+        $updateStatus
+    );
+
+    $updateSql = "
+        UPDATE orders
+        SET order_status = '$statusEscaped'
+        WHERE order_id = $updateOrderId
+        LIMIT 1
+    ";
+
+    if (!mysqli_query($Connection, $updateSql)) {
+        die(
+            "Unable to update order status: " .
+            mysqli_error($Connection)
+        );
+    }
+
+    header("Location: manage_orders.php?status_updated=1");
+    exit();
+}
+
+
 /*
 ====================================================
 GET ALL ORDERS
@@ -889,6 +950,44 @@ body.dark-mode .period-btn.active { background:#087df5; color:#fff; }
     border-color: #b8d9f2;
 }
 
+.update-button {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #b8d9f2;
+    border-radius: 9px;
+    background: #eaf4ff;
+    color: #0077cc;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 12px;
+    margin-left: 6px;
+}
+
+.update-button:hover {
+    background: #0077cc;
+    color: #ffffff;
+    border-color: #0077cc;
+}
+
+body.dark-mode .update-button {
+    background: #172554;
+    color: #93c5fd;
+    border-color: #31558a;
+}
+
+body.dark-mode .update-button:hover {
+    background: #087df5;
+    color: #ffffff;
+    border-color: #087df5;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
 .no-orders {
     padding: 65px 20px;
     text-align: center;
@@ -1595,24 +1694,8 @@ body.dark-mode .period-btn.active { background:#087df5; color:#fff; }
                             'image' =>
                                 $order['image_url'] ?? '',
 
-                            /*
-                             * Prescription files are physically stored in
-                             * ./uploads/ by the customer upload workflow.
-                             *
-                             * The database stores the filename, so always
-                             * build the browser URL here. This prevents the
-                             * browser from requesting:
-                             *   /onlinepharmacy/filename.jpg
-                             * instead of:
-                             *   /onlinepharmacy/uploads/filename.jpg
-                             */
-                            'prescription' => (
-                                !empty($order['prescription_url'])
-                                ? './uploads/' . basename(
-                                    trim((string)$order['prescription_url'])
-                                )
-                                : ''
-                            )
+                            'prescription' =>
+                                $order['prescription_url'] ?? ''
                         ];
 
                     ?>
@@ -1809,24 +1892,50 @@ body.dark-mode .period-btn.active { background:#087df5; color:#fff; }
 
                             <td>
 
-                                <button
-                                    type="button"
-                                    class="view-button"
-                                    onclick='openOrderModal(
-                                        <?php
-                                        echo json_encode(
-                                            $details,
-                                            JSON_HEX_TAG |
-                                            JSON_HEX_APOS |
-                                            JSON_HEX_QUOT |
-                                            JSON_HEX_AMP
-                                        );
-                                        ?>
-                                    )'
-                                >
-                                    <i class="fa-solid fa-eye"></i>
-                                    View
-                                </button>
+                                <div class="action-buttons">
+
+                                    <!-- VIEW ORDER DETAILS -->
+                                    <button
+                                        type="button"
+                                        class="view-button"
+                                        onclick='openOrderModal(
+                                            <?php
+                                            echo json_encode(
+                                                $details,
+                                                JSON_HEX_TAG |
+                                                JSON_HEX_APOS |
+                                                JSON_HEX_QUOT |
+                                                JSON_HEX_AMP
+                                            );
+                                            ?>
+                                        )'
+                                    >
+                                        <i class="fa-solid fa-eye"></i>
+                                        View
+                                    </button>
+
+                                    <!-- DIRECT UPDATE STATUS BUTTON -->
+                                    <button
+                                        type="button"
+                                        class="update-button"
+                                        onclick='openOrderModal(
+                                            <?php
+                                            echo json_encode(
+                                                $details,
+                                                JSON_HEX_TAG |
+                                                JSON_HEX_APOS |
+                                                JSON_HEX_QUOT |
+                                                JSON_HEX_AMP
+                                            );
+                                            ?>,
+                                            true
+                                        )'
+                                    >
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        Update Status
+                                    </button>
+
+                                </div>
 
                             </td>
 
@@ -2059,10 +2168,16 @@ body.dark-mode .period-btn.active { background:#087df5; color:#fff; }
                 </h3>
 
                 <form
-                    action="update_order_status.php"
+                    action="manage_orders.php"
                     method="POST"
                     class="status-form"
                 >
+
+                    <input
+                        type="hidden"
+                        name="update_order_status"
+                        value="1"
+                    >
 
                     <input
                         type="hidden"
@@ -2354,7 +2469,7 @@ function escapeHtml(value) {
 }
 
 
-function openOrderModal(order) {
+function openOrderModal(order, focusStatus = false) {
 
     document.getElementById("modalTitle")
         .textContent =
@@ -2538,6 +2653,21 @@ function openOrderModal(order) {
 
     document.body.style.overflow =
         "hidden";
+
+    /*
+       When Admin/Manager clicks "Update Status"
+       directly from the table, focus the status selector.
+    */
+    if (focusStatus) {
+        setTimeout(function() {
+            const statusSelect =
+                document.getElementById("modalStatusSelect");
+
+            if (statusSelect) {
+                statusSelect.focus();
+            }
+        }, 100);
+    }
 }
 
 

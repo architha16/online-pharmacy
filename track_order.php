@@ -1,5 +1,4 @@
 <?php
-
 /*
 =========================================================
 PHARMACYX - TRACK ORDER
@@ -7,1434 +6,620 @@ CUSTOMER ORDER TRACKING
 =========================================================
 */
 
-
-/*
-=========================================================
-CUSTOMER SESSION
-=========================================================
-*/
-
 session_name("PHARMACYX_CUSTOMER");
 session_start();
 
+/* Prevent stale tracking pages */
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
 
-/*
-=========================================================
-CUSTOMER LOGIN CHECK
-=========================================================
-*/
-
+/* Customer login check */
 if (
     !isset($_SESSION['username']) ||
     !isset($_SESSION['user_type']) ||
     $_SESSION['user_type'] !== 'Customer'
 ) {
-
     header("Location: signin.php?role=Customer");
     exit();
-
 }
-
-
-/*
-=========================================================
-DATABASE CONNECTION
-=========================================================
-*/
 
 require_once "./db_Config/config.php";
 
-
-/*
-=========================================================
-LOGGED-IN CUSTOMER
-=========================================================
-*/
-
 $user = $_SESSION['username'];
+$userEscaped = mysqli_real_escape_string($Connection, $user);
 
-
-/*
-=========================================================
-GET ORDER ID
-=========================================================
-*/
-
-if (
-    isset($_GET['id']) &&
-    is_numeric($_GET['id']) &&
-    (int)$_GET['id'] > 0
-) {
-    $order_id = (int)$_GET['id'];
-} else {
-    // If no order ID is supplied, get the latest order
-    // belonging to the logged-in customer.
-    $safeUserForLatest = mysqli_real_escape_string($Connection, $user);
-
-    $latestOrderQuery = "
-        SELECT order_id
-        FROM orders
-        WHERE user_name = '$safeUserForLatest'
-        ORDER BY order_id DESC
-        LIMIT 1
-    ";
-
-    $latestOrderResult = mysqli_query($Connection, $latestOrderQuery);
-
-    if (!$latestOrderResult) {
-        die(
-            "Database Error: " .
-            htmlspecialchars(mysqli_error($Connection))
-        );
-    }
-
-    if (mysqli_num_rows($latestOrderResult) == 0) {
-        die("No Orders Found");
-    }
-
-    $latestOrder = mysqli_fetch_assoc($latestOrderResult);
-    $order_id = (int)$latestOrder['order_id'];
+/* Accept either ?id=3 or ?order_id=3 */
+$orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$orderId) {
+    $orderId = filter_input(INPUT_GET, 'order_id', FILTER_VALIDATE_INT);
 }
 
+if (!$orderId || $orderId <= 0) {
+    die("Invalid order ID.");
+}
+
+$orderId = (int)$orderId;
 
 /*
-=========================================================
-SECURE USERNAME
-=========================================================
+Fetch only the logged-in customer's order.
+This also prevents a customer from viewing another
+customer's order by manually changing the URL.
 */
-
-$safeUser = mysqli_real_escape_string(
-    $Connection,
-    $user
-);
-
-
-/*
-=========================================================
-GET ORDER DETAILS
-=========================================================
-*/
-
 $query = "
+    SELECT
+        o.order_id,
+        o.user_name,
+        o.order_status,
+        o.order_type,
+        o.qty,
+        o.receiver_name,
+        o.street,
+        o.city,
+        o.postal_code,
+        o.Order_total,
+        o.payment_method,
+        o.order_date,
 
-SELECT
+        p.product_id,
+        p.product_name,
+        p.product_description,
+        p.price,
+        p.image_url
 
-    o.*,
+    FROM orders o
 
-    p.product_name,
-    p.image_url,
-    p.price
+    LEFT JOIN products p
+        ON o.product_id = p.product_id
 
-FROM orders o
+    WHERE o.order_id = $orderId
+      AND o.user_name = '$userEscaped'
 
-INNER JOIN products p
-    ON o.product_id = p.product_id
-
-WHERE o.order_id = '$order_id'
-
-AND o.user_name = '$safeUser'
-
-LIMIT 1
-
+    LIMIT 1
 ";
 
-
-$result = mysqli_query(
-    $Connection,
-    $query
-);
-
+$result = mysqli_query($Connection, $query);
 
 if (!$result) {
-
     die(
-        "Database Error: " .
-        htmlspecialchars(
-            mysqli_error($Connection)
-        )
+        "Order Query Error: " .
+        htmlspecialchars(mysqli_error($Connection), ENT_QUOTES, 'UTF-8')
     );
-
 }
 
-
-/*
-=========================================================
-ORDER NOT FOUND
-=========================================================
-*/
-
-if (mysqli_num_rows($result) == 0) {
-
-    die("Order Not Found");
-
+if (mysqli_num_rows($result) === 0) {
+    die(
+        '<div style="font-family:Arial,sans-serif;padding:40px;text-align:center;">
+            <h2 style="color:#dc3545;">Order Not Found</h2>
+            <p>This order does not exist or does not belong to your account.</p>
+            <a href="my_orders.php"
+               style="display:inline-block;padding:10px 18px;background:#0077cc;color:white;text-decoration:none;border-radius:6px;">
+               Back to My Orders
+            </a>
+        </div>'
+    );
 }
-
 
 $order = mysqli_fetch_assoc($result);
 
+/* Product image path helper */
+function pharmacyxTrackImagePath($imageValue)
+{
+    $imageValue = trim((string)$imageValue);
+    $fallback = './Images/product-icons/Pharmacy-Isometric-Icons-1.png';
 
-/*
-=========================================================
-ORDER STATUS
-=========================================================
-*/
+    if ($imageValue === '') {
+        return $fallback;
+    }
 
-$status =
-    $order['order_status'] ?? 'Pending';
+    if (preg_match('#^(https?:)?//#i', $imageValue)) {
+        return $imageValue;
+    }
 
+    $imageValue = str_replace('\\', '/', $imageValue);
 
-/*
-=========================================================
-EXPECTED DELIVERY DATE
-=========================================================
-*/
+    while (strpos($imageValue, './') === 0) {
+        $imageValue = substr($imageValue, 2);
+    }
 
-$expected = date(
+    $imageValue = ltrim($imageValue, '/');
 
-    "d M Y",
+    if (stripos($imageValue, 'Images/') === 0) {
+        return './' . $imageValue;
+    }
 
-    strtotime(
-        $order['order_date'] . " +2 days"
-    )
+    if (stripos($imageValue, 'product-icons/') === 0) {
+        return './Images/' . $imageValue;
+    }
 
-);
+    return './Images/product-icons/' . basename($imageValue);
+}
 
+$status = trim((string)($order['order_status'] ?? 'Pending'));
 
-/*
-=========================================================
-STATUS CLASS
-=========================================================
-*/
+$statusSteps = [
+    'Pending',
+    'Accepted',
+    'Packed',
+    'Out for Delivery',
+    'Delivered'
+];
 
-$statusClass = "pending";
+$currentIndex = array_search($status, $statusSteps, true);
+if ($currentIndex === false) {
+    $currentIndex = 0;
+}
 
+$isTerminalProblem = ($status === 'Rejected' || $status === 'Cancelled');
+
+$imagePath = pharmacyxTrackImagePath($order['image_url'] ?? '');
+
+$productName = $order['product_name'] ?? 'Medicine';
+$productDescription = $order['product_description'] ?? 'Medicine product';
+$qty = (int)($order['qty'] ?? 0);
+$total = (float)($order['Order_total'] ?? 0);
+$price = (float)($order['price'] ?? 0);
+$payment = $order['payment_method'] ?? 'Not Available';
+$orderDate = $order['order_date'] ?? '';
+
+$statusClass = 'pending';
 
 switch ($status) {
-
-    case "Accepted":
-
-        $statusClass = "accepted";
-
+    case 'Accepted':
+        $statusClass = 'accepted';
         break;
-
-
-    case "Packed":
-
-        $statusClass = "packed";
-
+    case 'Packed':
+        $statusClass = 'packed';
         break;
-
-
-    case "Out for Delivery":
-
-        $statusClass = "delivery";
-
+    case 'Shipped':
+        $statusClass = 'shipped';
         break;
-
-
-    case "Delivered":
-
-        $statusClass = "delivered";
-
+    case 'Out for Delivery':
+        $statusClass = 'delivery';
         break;
-
-
-    case "Rejected":
-
-        $statusClass = "rejected";
-
+    case 'Delivered':
+        $statusClass = 'delivered';
         break;
-
-
-    case "Cancelled":
-
-        $statusClass = "cancelled";
-
+    case 'Rejected':
+        $statusClass = 'rejected';
         break;
-
-
-    case "Pending":
-
+    case 'Cancelled':
+        $statusClass = 'cancelled';
+        break;
     default:
-
-        $statusClass = "pending";
-
+        $statusClass = 'pending';
         break;
-
 }
-
 ?>
-
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Order #<?php echo $orderId; ?> - PharmacyX</title>
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
-
-<title>
-
-Track Order #
-
-<?php
-
-echo (int)$order['order_id'];
-
-?>
-
-- PharmacyX
-
-</title>
-
-
-<link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
->
-
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-
-/* =====================================================
-   BODY
-===================================================== */
+* { box-sizing:border-box; }
 
 body {
-
-    margin: 0;
-
-    font-family: Arial, sans-serif;
-
-    background: #eef5ff;
-
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#eef5ff;
+    color:#1f2937;
 }
-
-
-/* =====================================================
-   CONTAINER
-===================================================== */
 
 .container {
-
-    width: 75%;
-
-    margin: 40px auto;
-
+    width:90%;
+    max-width:1050px;
+    margin:35px auto 60px;
 }
 
-
-/* =====================================================
-   TITLE
-===================================================== */
-
-.title {
-
-    text-align: center;
-
-    color: #0077cc;
-
-    margin-bottom: 30px;
-
+.page-title {
+    text-align:center;
+    color:#0878d1;
+    margin:10px 0 30px;
+    font-size:32px;
 }
-
-
-/* =====================================================
-   CARD
-===================================================== */
 
 .card {
-
-    background: white;
-
-    padding: 25px;
-
-    border-radius: 12px;
-
-    box-shadow:
-        0 0 12px rgba(0,0,0,0.12);
-
-    display: flex;
-
-    gap: 30px;
-
-    align-items: center;
-
+    background:#fff;
+    border-radius:14px;
+    box-shadow:0 5px 20px rgba(0,0,0,.08);
+    margin-bottom:22px;
 }
 
+.order-summary { padding:25px; }
 
-/* =====================================================
-   PRODUCT IMAGE
-===================================================== */
-
-.image {
-
-    width: 220px;
-
-    height: 220px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border: 1px solid #ddd;
-
-    border-radius: 10px;
-
-    background: white;
-
-    overflow: hidden;
-
-    flex-shrink: 0;
-
+.product-row {
+    display:flex;
+    align-items:center;
+    gap:25px;
 }
 
-
-.image img {
-
-    width: 100%;
-
-    height: 100%;
-
-    object-fit: contain;
-
+.product-image {
+    width:160px;
+    height:160px;
+    flex:0 0 160px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    overflow:hidden;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
-
-/* =====================================================
-   DETAILS
-===================================================== */
-
-.details {
-
-    flex: 1;
-
+.product-image img {
+    width:100%;
+    height:100%;
+    object-fit:contain;
 }
 
+.product-details { flex:1; }
 
-.details h2 {
-
-    margin-top: 0;
-
-    color: #222;
-
+.product-details h2 {
+    margin:0 0 12px;
+    color:#222;
 }
 
-
-.info {
-
-    margin: 12px 0;
-
-    font-size: 16px;
-
+.description {
+    color:#666;
+    line-height:1.5;
+    margin-bottom:12px;
 }
 
+.info { margin:7px 0; }
 
-/* =====================================================
-   STATUS BADGES
-===================================================== */
-
-.badge {
-
-    display: inline-block;
-
-    padding: 7px 15px;
-
-    border-radius: 20px;
-
-    color: white;
-
-    font-weight: bold;
-
+.total {
+    color:#138a2e;
+    font-size:19px;
+    font-weight:bold;
 }
 
-
-/* Pending */
-
-.pending {
-
-    background: #ff9800;
-
+.status-badge {
+    display:inline-block;
+    padding:8px 16px;
+    border-radius:20px;
+    color:#fff;
+    font-weight:bold;
 }
 
+.pending { background:#ff9800; }
+.accepted { background:#28a745; }
+.packed { background:#6f42c1; }
+.shipped { background:#673ab7; }
+.delivery { background:#ff6600; }
+.delivered { background:#2196f3; }
+.rejected { background:#dc3545; }
+.cancelled { background:#6c757d; }
 
-/* Accepted */
-
-.accepted {
-
-    background: #28a745;
-
+.tracking-card,
+.address-card {
+    padding:25px;
 }
 
-
-/* Packed */
-
-.packed {
-
-    background: #6f42c1;
-
+.section-title {
+    color:#0878d1;
+    margin:0 0 25px;
+    font-size:21px;
 }
 
-
-/* Out for Delivery */
-
-.delivery {
-
-    background: #ff6600;
-
+.timeline {
+    position:relative;
+    margin:0;
+    padding:0;
 }
 
-
-/* Delivered */
-
-.delivered {
-
-    background: #2196f3;
-
+.timeline::before {
+    content:"";
+    position:absolute;
+    left:12px;
+    top:12px;
+    bottom:12px;
+    width:3px;
+    background:#d9e3ee;
 }
 
-
-/* Rejected */
-
-.rejected {
-
-    background: #dc3545;
-
+.step {
+    position:relative;
+    display:flex;
+    align-items:flex-start;
+    gap:18px;
+    margin:0 0 25px;
+    min-height:42px;
 }
 
+.step:last-child { margin-bottom:0; }
 
-/* Cancelled */
-
-.cancelled {
-
-    background: #6c757d;
-
+.step-dot {
+    position:relative;
+    z-index:2;
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:#fff;
+    border:3px solid #b8c5d3;
+    flex:0 0 28px;
 }
 
-
-/* =====================================================
-   SECTIONS
-===================================================== */
-
-.section {
-
-    margin-top: 30px;
-
-    padding: 20px;
-
-    background: #f8f9fa;
-
-    border-radius: 10px;
-
+.step.completed .step-dot {
+    background:#28a745;
+    border-color:#28a745;
 }
 
-
-.section h3 {
-
-    margin-top: 0;
-
-    color: #0077cc;
-
+.step.current .step-dot {
+    background:#0878d1;
+    border-color:#0878d1;
+    box-shadow:0 0 0 5px rgba(8,120,209,.12);
 }
 
+.step-content { padding-top:2px; }
 
-/* =====================================================
-   TRACKING
-===================================================== */
-
-.tracking-step {
-
-    line-height: 45px;
-
-    font-size: 18px;
-
+.step-name {
+    font-size:17px;
+    font-weight:bold;
+    color:#777;
 }
 
-
-/* =====================================================
-   BUTTONS
-===================================================== */
-
-.action-button {
-
-    display: inline-block;
-
-    color: white;
-
-    padding: 15px 30px;
-
-    text-decoration: none;
-
-    border-radius: 8px;
-
-    font-size: 18px;
-
+.step.completed .step-name,
+.step.current .step-name {
+    color:#1f2937;
 }
 
-
-.cancel-button {
-
-    background: red;
-
-    margin-right: 15px;
-
+.step-note {
+    margin-top:4px;
+    color:#777;
+    font-size:14px;
 }
 
-
-.invoice-button {
-
-    background: #007bff;
-
+.problem-card {
+    padding:22px;
+    border-left:5px solid #dc3545;
 }
 
+.problem-card h3 {
+    margin-top:0;
+    color:#dc3545;
+}
 
-/* =====================================================
-   MOBILE
-===================================================== */
+.address-row { margin:8px 0; }
 
-@media (max-width: 768px) {
+.actions {
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
 
-    .container {
+.btn {
+    display:inline-block;
+    padding:11px 18px;
+    border-radius:7px;
+    text-decoration:none;
+    color:#fff;
+    font-weight:bold;
+}
 
-        width: 90%;
+.back-btn { background:#0878d1; }
+.invoice-btn { background:#28a745; }
 
+@media (max-width:700px) {
+    .container { width:95%; }
+
+    .product-row {
+        flex-direction:column;
+        align-items:flex-start;
     }
 
-
-    .card {
-
-        flex-direction: column;
-
-        align-items: stretch;
-
+    .product-image {
+        width:140px;
+        height:140px;
+        flex-basis:140px;
     }
 
-
-    .image {
-
-        width: 100%;
-
-        height: 250px;
-
-    }
-
-
-    .action-button {
-
-        display: block;
-
-        margin: 10px 0;
-
-        text-align: center;
-
-    }
-
+    .page-title { font-size:27px; }
 }
-
 </style>
-
 </head>
-
 
 <body>
 
-
 <div class="container">
 
+    <h1 class="page-title">
+        <i class="fa fa-truck"></i>
+        Track Your Order
+    </h1>
 
-<!-- =================================================
-     PAGE TITLE
-================================================= -->
+    <div class="card order-summary">
+        <div class="product-row">
 
-<h1 class="title">
+            <div class="product-image">
+                <img
+                    src="<?php echo htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8'); ?>"
+                    alt="<?php echo htmlspecialchars($productName, ENT_QUOTES, 'UTF-8'); ?>"
+                    onerror="this.onerror=null;this.src='./Images/product-icons/Pharmacy-Isometric-Icons-1.png';"
+                >
+            </div>
 
-    <i class="fa fa-truck"></i>
+            <div class="product-details">
 
-    Track Your Order
+                <h2>
+                    <?php echo htmlspecialchars($productName, ENT_QUOTES, 'UTF-8'); ?>
+                </h2>
 
-</h1>
+                <div class="description">
+                    <?php echo htmlspecialchars($productDescription, ENT_QUOTES, 'UTF-8'); ?>
+                </div>
 
+                <div class="info">
+                    <b>Order ID:</b> #<?php echo $orderId; ?>
+                </div>
 
+                <div class="info">
+                    <b>Quantity:</b> <?php echo $qty; ?>
+                </div>
 
-<!-- =================================================
-     PRODUCT INFORMATION
-================================================= -->
+                <div class="info">
+                    <b>Price:</b> ₹<?php echo number_format($price, 2); ?>
+                </div>
 
-<div class="card">
+                <div class="info total">
+                    <b>Total:</b> ₹<?php echo number_format($total, 2); ?>
+                </div>
 
+                <div class="info">
+                    <b>Payment:</b>
+                    <?php echo htmlspecialchars($payment, ENT_QUOTES, 'UTF-8'); ?>
+                </div>
 
-    <!-- PRODUCT IMAGE -->
+                <div class="info">
+                    <b>Order Date:</b>
+                    <?php echo htmlspecialchars($orderDate, ENT_QUOTES, 'UTF-8'); ?>
+                </div>
 
-    <div class="image">
+                <div class="info" style="margin-top:15px;">
+                    <b>Current Status:</b>
+                    <span class="status-badge <?php echo htmlspecialchars($statusClass, ENT_QUOTES, 'UTF-8'); ?>">
+                        <?php echo htmlspecialchars($status, ENT_QUOTES, 'UTF-8'); ?>
+                    </span>
+                </div>
 
-        <img
-
-            src="./Images/product-icons/<?php
-
-                echo htmlspecialchars(
-                    $order['image_url']
-                    ?? ''
-                );
-
-            ?>"
-
-            alt="<?php
-
-                echo htmlspecialchars(
-                    $order['product_name']
-                    ?? 'Medicine'
-                );
-
-            ?>"
-
-            onerror="
-                this.src='./Images/product-icons/Pharmacy-Isometric-Icons-1.png';
-            "
-
-        >
-
+            </div>
+        </div>
     </div>
 
+    <?php if ($isTerminalProblem): ?>
 
+        <div class="card problem-card">
+            <h3>
+                <i class="fa fa-circle-exclamation"></i>
+                Order <?php echo htmlspecialchars($status, ENT_QUOTES, 'UTF-8'); ?>
+            </h3>
+            <p>
+                This order is no longer moving through the normal delivery process.
+            </p>
+        </div>
 
-    <!-- ORDER DETAILS -->
+    <?php else: ?>
 
-    <div class="details">
+        <div class="card tracking-card">
 
+            <h2 class="section-title">
+                <i class="fa fa-location-dot"></i>
+                Order Tracking
+            </h2>
 
-        <h2>
+            <div class="timeline">
 
-            <?php
+                <?php
+                $notes = [
+                    'Pending' => 'Order has been received and is waiting for processing.',
+                    'Accepted' => 'Pharmacy has accepted your order.',
+                    'Packed' => 'Your medicine has been packed.',
+                    'Out for Delivery' => 'Your order is on the way to your address.',
+                    'Delivered' => 'Your order has been delivered successfully.'
+                ];
+                ?>
 
-            echo htmlspecialchars(
+                <?php foreach ($statusSteps as $index => $step): ?>
 
-                $order['product_name']
-                ?? 'Medicine'
+                    <?php
+                    $stepClass = '';
 
-            );
+                    if ($index < $currentIndex) {
+                        $stepClass = 'completed';
+                    } elseif ($index === $currentIndex) {
+                        $stepClass = 'current';
+                    }
+                    ?>
 
-            ?>
+                    <div class="step <?php echo $stepClass; ?>">
 
+                        <div class="step-dot">
+                            <?php if ($index < $currentIndex): ?>
+                                <i class="fa fa-check"
+                                   style="color:#fff;font-size:13px;margin:5px;"></i>
+                            <?php elseif ($index === $currentIndex): ?>
+                                <i class="fa fa-circle"
+                                   style="color:#fff;font-size:10px;margin:6px;"></i>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="step-content">
+
+                            <div class="step-name">
+                                <?php echo htmlspecialchars($step, ENT_QUOTES, 'UTF-8'); ?>
+                            </div>
+
+                            <?php if ($index === $currentIndex): ?>
+                                <div class="step-note">
+                                    <?php echo htmlspecialchars($notes[$step], ENT_QUOTES, 'UTF-8'); ?>
+                                </div>
+                            <?php endif; ?>
+
+                        </div>
+
+                    </div>
+
+                <?php endforeach; ?>
+
+            </div>
+
+        </div>
+
+    <?php endif; ?>
+
+    <div class="card address-card">
+
+        <h2 class="section-title">
+            <i class="fa fa-house"></i>
+            Delivery Address
         </h2>
 
-
-
-        <!-- ORDER ID -->
-
-        <div class="info">
-
-            <b>
-                Order ID :
-            </b>
-
-            #
-
-            <?php
-
-            echo (int)$order['order_id'];
-
-            ?>
-
+        <div class="address-row">
+            <b>Name:</b>
+            <?php echo htmlspecialchars($order['receiver_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </div>
 
-
-
-        <!-- QUANTITY -->
-
-        <div class="info">
-
-            <b>
-                Quantity :
-            </b>
-
-            <?php
-
-            echo (int)$order['qty'];
-
-            ?>
-
+        <div class="address-row">
+            <b>Street:</b>
+            <?php echo htmlspecialchars($order['street'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </div>
 
-
-
-        <!-- TOTAL -->
-
-        <div class="info">
-
-            <b>
-                Total :
-            </b>
-
-            ₹<?php
-
-            echo number_format(
-
-                (float)$order['Order_total'],
-
-                2
-
-            );
-
-            ?>
-
+        <div class="address-row">
+            <b>City:</b>
+            <?php echo htmlspecialchars($order['city'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </div>
 
-
-
-        <!-- PAYMENT -->
-
-        <div class="info">
-
-            <b>
-                Payment :
-            </b>
-
-            <?php
-
-            echo htmlspecialchars(
-
-                $order['payment_method']
-                ?? 'Not Available'
-
-            );
-
-            ?>
-
+        <div class="address-row">
+            <b>Postal Code:</b>
+            <?php echo htmlspecialchars($order['postal_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </div>
 
+    </div>
 
+    <div class="actions">
 
-        <!-- ORDER DATE -->
+        <a class="btn back-btn" href="my_orders.php">
+            <i class="fa fa-arrow-left"></i>
+            Back to My Orders
+        </a>
 
-        <div class="info">
-
-            <b>
-                Order Date :
-            </b>
-
-            <?php
-
-            echo htmlspecialchars(
-
-                $order['order_date']
-                ?? ''
-
-            );
-
-            ?>
-
-        </div>
-
-
-
-        <!-- CURRENT STATUS -->
-
-        <div class="info">
-
-            <b>
-                Current Status :
-            </b>
-
-
-            <span
-                class="badge <?php echo $statusClass; ?>"
-            >
-
-                <?php
-
-                echo htmlspecialchars(
-                    $status
-                );
-
-                ?>
-
-            </span>
-
-        </div>
-
+        <a
+            class="btn invoice-btn"
+            href="download_invoice.php?id=<?php echo $orderId; ?>"
+        >
+            <i class="fa fa-file-pdf"></i>
+            Download Invoice
+        </a>
 
     </div>
 
 </div>
-
-
-
-<!-- =================================================
-     ORDER TRACKING
-================================================= -->
-
-<div class="section">
-
-
-    <h3>
-
-        <i class="fa fa-map-marker-alt"></i>
-
-        Order Tracking
-
-    </h3>
-
-
-    <div class="tracking-step">
-
-
-    <?php
-
-
-    /*
-    =================================================
-    CANCELLED
-    =================================================
-    */
-
-    if ($status === "Cancelled") {
-
-        echo "
-
-        <div style='
-            color:red;
-            font-weight:bold;
-            font-size:18px;
-        '>
-
-            ❌ Order Cancelled
-
-        </div>
-
-        ";
-
-    }
-
-
-    /*
-    =================================================
-    REJECTED
-    =================================================
-    */
-
-    elseif ($status === "Rejected") {
-
-        echo "
-
-        <div style='
-            color:red;
-            font-weight:bold;
-            font-size:18px;
-        '>
-
-            ❌ Order Rejected
-
-        </div>
-
-        ";
-
-    }
-
-
-    /*
-    =================================================
-    NORMAL ORDER
-    =================================================
-    */
-
-    else {
-
-
-        $steps = array(
-
-            "Pending",
-
-            "Accepted",
-
-            "Packed",
-
-            "Out for Delivery",
-
-            "Delivered"
-
-        );
-
-
-        $completed = true;
-
-
-        foreach ($steps as $step) {
-
-
-            if ($completed) {
-
-                echo "
-
-                <div style='color:green;'>
-
-                    ✔ $step
-
-                </div>
-
-                ";
-
-            }
-
-            else {
-
-                echo "
-
-                <div style='color:gray;'>
-
-                    ○ $step
-
-                </div>
-
-                ";
-
-            }
-
-
-            if ($status === $step) {
-
-                $completed = false;
-
-            }
-
-        }
-
-    }
-
-    ?>
-
-
-    </div>
-
-</div>
-
-
-
-<!-- =================================================
-     DELIVERY ADDRESS
-================================================= -->
-
-<div class="section">
-
-
-    <h3>
-
-        <i class="fa fa-home"></i>
-
-        Delivery Address
-
-    </h3>
-
-
-    <p>
-
-        <b>
-            Name :
-        </b>
-
-        <?php
-
-        echo htmlspecialchars(
-            $order['receiver_name']
-            ?? ''
-        );
-
-        ?>
-
-    </p>
-
-
-    <p>
-
-        <b>
-            Street :
-        </b>
-
-        <?php
-
-        echo htmlspecialchars(
-            $order['street']
-            ?? ''
-        );
-
-        ?>
-
-    </p>
-
-
-    <p>
-
-        <b>
-            City :
-        </b>
-
-        <?php
-
-        echo htmlspecialchars(
-            $order['city']
-            ?? ''
-        );
-
-        ?>
-
-    </p>
-
-
-    <p>
-
-        <b>
-            Postal Code :
-        </b>
-
-        <?php
-
-        echo htmlspecialchars(
-            $order['postal_code']
-            ?? ''
-        );
-
-        ?>
-
-    </p>
-
-
-</div>
-
-
-
-<!-- =================================================
-     ESTIMATED DELIVERY
-================================================= -->
-
-<div class="section">
-
-
-    <h3>
-
-        <i class="fa fa-calendar"></i>
-
-        Estimated Delivery
-
-    </h3>
-
-
-    <p
-        style="
-            font-size:20px;
-        "
-    >
-
-
-    <?php
-
-
-    if ($status === "Delivered") {
-
-        echo "
-
-        <span
-            style='
-                color:green;
-                font-weight:bold;
-            '
-        >
-
-            Delivered Successfully
-
-        </span>
-
-        ";
-
-    }
-
-
-    elseif (
-        $status === "Rejected" ||
-        $status === "Cancelled"
-    ) {
-
-        echo "
-
-        <span
-            style='
-                color:red;
-                font-weight:bold;
-            '
-        >
-
-            Order Cancelled
-
-        </span>
-
-        ";
-
-    }
-
-
-    else {
-
-        echo "
-
-        <span
-            style='
-                color:#0077cc;
-                font-weight:bold;
-            '
-        >
-
-            $expected
-
-        </span>
-
-        ";
-
-    }
-
-
-    ?>
-
-
-    </p>
-
-</div>
-
-
-
-<!-- =================================================
-     PAYMENT DETAILS
-================================================= -->
-
-<div class="section">
-
-
-    <h3>
-
-        <i class="fa fa-credit-card"></i>
-
-        Payment Details
-
-    </h3>
-
-
-    <p>
-
-        <b>
-            Payment Method :
-        </b>
-
-        <?php
-
-        echo htmlspecialchars(
-
-            $order['payment_method']
-            ?? 'Not Available'
-
-        );
-
-        ?>
-
-    </p>
-
-
-    <?php
-
-    /*
-    -----------------------------------------------------
-    GET PAYMENT RECORD
-    -----------------------------------------------------
-    */
-
-    $paymentOrderId =
-        (int)$order['order_id'];
-
-
-    $paymentQuery = mysqli_query(
-
-        $Connection,
-
-        "
-
-        SELECT
-
-            amount,
-            bank,
-            remark,
-            payment_date,
-            receipt_url
-
-        FROM payment
-
-        WHERE order_id = '$paymentOrderId'
-
-        LIMIT 1
-
-        "
-
-    );
-
-
-    if (
-        $paymentQuery &&
-        mysqli_num_rows($paymentQuery) > 0
-    ) {
-
-
-        $payment =
-            mysqli_fetch_assoc(
-                $paymentQuery
-            );
-
-    ?>
-
-        <p>
-
-            <b>
-                Amount Paid :
-            </b>
-
-            ₹<?php
-
-            echo number_format(
-
-                (float)$payment['amount'],
-
-                2
-
-            );
-
-            ?>
-
-        </p>
-
-
-        <?php
-
-        if (
-            !empty($payment['bank'])
-        ) {
-
-        ?>
-
-            <p>
-
-                <b>
-                    Bank :
-                </b>
-
-                <?php
-
-                echo htmlspecialchars(
-                    $payment['bank']
-                );
-
-                ?>
-
-            </p>
-
-        <?php
-
-        }
-
-
-        if (
-            !empty($payment['payment_date'])
-        ) {
-
-        ?>
-
-            <p>
-
-                <b>
-                    Payment Date :
-                </b>
-
-                <?php
-
-                echo htmlspecialchars(
-                    $payment['payment_date']
-                );
-
-                ?>
-
-            </p>
-
-        <?php
-
-        }
-
-    }
-
-    ?>
-
-
-</div>
-
-
-
-<!-- =================================================
-     ACTION BUTTONS
-================================================= -->
-
-<div
-    style="
-        margin-top:30px;
-        text-align:center;
-    "
->
-
-
-    <!-- BACK TO MY ORDERS -->
-
-    <a
-
-        href="my_orders.php"
-
-        class="action-button invoice-button"
-
-    >
-
-        <i class="fa fa-box"></i>
-
-        My Orders
-
-    </a>
-
-
-    <!-- DOWNLOAD INVOICE -->
-
-    <a
-
-        href="download_invoice.php?id=<?php
-
-            echo (int)$order['order_id'];
-
-        ?>"
-
-        class="action-button invoice-button"
-
-        style="margin-left:10px;"
-
-    >
-
-        <i class="fa fa-file-pdf"></i>
-
-        Download Invoice
-
-    </a>
-
-
-</div>
-
-
-</div>
-
 
 </body>
-
 </html>

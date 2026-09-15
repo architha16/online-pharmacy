@@ -65,6 +65,92 @@ if ($adminLoggedIn) {
 }
 
 /* ====================================================
+   ADD MEDICINE - HANDLE FORM IN THIS PAGE
+   ==================================================== */
+$addError = "";
+$addSuccess = "";
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_medicine'])) {
+    $productName = trim($_POST['product_name'] ?? '');
+    $productDescription = trim($_POST['product_description'] ?? '');
+    $price = (float)($_POST['price'] ?? 0);
+    $costPrice = (float)($_POST['cost_price'] ?? 0);
+    $stockQuantity = (int)($_POST['stock_quantity'] ?? 0);
+    $expireDate = trim($_POST['expire_date'] ?? '');
+    $prescriptionRequired = ($_POST['prescription_required'] ?? 'No') === 'Yes' ? 'Yes' : 'No';
+    $imageUrl = '';
+
+    if ($productName === '') {
+        $addError = 'Medicine name is required.';
+    } elseif ($price < 0 || $costPrice < 0) {
+        $addError = 'Price and cost price cannot be negative.';
+    } elseif ($stockQuantity < 0) {
+        $addError = 'Stock quantity cannot be negative.';
+    } elseif ($expireDate !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $expireDate)) {
+        $addError = 'Please enter a valid expiry date.';
+    }
+
+    /* Optional medicine image upload */
+    if ($addError === '' && isset($_FILES['medicine_image']) && $_FILES['medicine_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+        if ($_FILES['medicine_image']['error'] !== UPLOAD_ERR_OK) {
+            $addError = 'Medicine image upload failed.';
+        } elseif ($_FILES['medicine_image']['size'] > 5 * 1024 * 1024) {
+            $addError = 'Medicine image must be 5 MB or smaller.';
+        } else {
+            $allowed = [
+                'image/jpeg' => 'jpg',
+                'image/png'  => 'png',
+                'image/webp' => 'webp',
+                'image/gif'  => 'gif'
+            ];
+            $mime = (new finfo(FILEINFO_MIME_TYPE))->file($_FILES['medicine_image']['tmp_name']);
+            if (!isset($allowed[$mime])) {
+                $addError = 'Only JPG, PNG, WEBP and GIF images are allowed.';
+            } else {
+                $uploadDir = __DIR__ . '/Images/product-icons/';
+                if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true)) {
+                    $addError = 'Unable to create the product image folder.';
+                } else {
+                    $fileName = 'medicine_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $allowed[$mime];
+                    if (move_uploaded_file($_FILES['medicine_image']['tmp_name'], $uploadDir . $fileName)) {
+                        $imageUrl = 'Images/product-icons/' . $fileName;
+                    } else {
+                        $addError = 'Unable to save the medicine image.';
+                    }
+                }
+            }
+        }
+    }
+
+    if ($addError === '') {
+        $nameEsc = mysqli_real_escape_string($Connection, $productName);
+        $descEsc = mysqli_real_escape_string($Connection, $productDescription);
+        $imageEsc = mysqli_real_escape_string($Connection, $imageUrl);
+        $dateSql = $expireDate !== '' ? "'" . mysqli_real_escape_string($Connection, $expireDate) . "'" : "NULL";
+
+        $insertQuery = "INSERT INTO products
+            (product_name, product_description, price, cost_price, stock_quantity, image_url, expire_date, prescription_required)
+            VALUES
+            ('$nameEsc', '$descEsc', $price, $costPrice, $stockQuantity, '$imageEsc', $dateSql, '$prescriptionRequired')";
+
+        if (mysqli_query($Connection, $insertQuery)) {
+            header('Location: manage_products.php?added=1');
+            exit();
+        } else {
+            /* Remove uploaded image if DB insert failed */
+            if ($imageUrl !== '' && is_file(__DIR__ . '/' . $imageUrl)) {
+                @unlink(__DIR__ . '/' . $imageUrl);
+            }
+            $addError = 'Add Medicine Error: ' . mysqli_error($Connection);
+        }
+    }
+}
+
+if (isset($_GET['added']) && $_GET['added'] === '1') {
+    $addSuccess = 'Medicine added successfully.';
+}
+
+/* ====================================================
    DELETE PRODUCT - EXISTING FUNCTIONALITY
    ==================================================== */
 if (isset($_GET['delete'])) {
@@ -568,6 +654,72 @@ tbody tr:last-child td { border-bottom: 0; }
 .empty-state i { font-size: 42px; opacity: .45; margin-bottom: 15px; }
 .empty-state strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 5px; }
 
+/* ================= ADD MEDICINE MODAL ================= */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .58);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+}
+.modal-backdrop.show { display: flex; }
+.add-modal {
+    width: min(760px, 100%);
+    max-height: 92vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 25px 70px rgba(0,0,0,.22);
+}
+.modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 2;
+}
+.modal-head h2 { margin: 0; font-size: 19px; }
+.modal-head p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+.modal-close {
+    width: 38px; height: 38px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text); border-radius: 10px;
+    cursor: pointer; font-size: 16px;
+}
+.add-form { padding: 22px; }
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 7px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 12px; font-weight: 800; color: var(--text); }
+.form-group input, .form-group textarea, .form-group select {
+    width: 100%; border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text); border-radius: 10px; padding: 11px 12px; outline: none;
+    font: inherit; font-size: 13px;
+}
+.form-group textarea { min-height: 95px; resize: vertical; }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(11,132,255,.1);
+}
+.form-help { color: var(--muted); font-size: 10px; }
+.alert-box { margin: 0 0 18px; padding: 11px 13px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+.alert-error { background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid rgba(239,68,68,.18); }
+.alert-success { background: rgba(22,163,74,.1); color: var(--success); border: 1px solid rgba(22,163,74,.18); }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
+.cancel-btn, .save-btn { border: 0; border-radius: 10px; padding: 11px 16px; cursor: pointer; font-weight: 800; font-size: 12px; }
+.cancel-btn { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+.save-btn { background: var(--primary); color: #fff; }
+.save-btn:hover { background: var(--primary-dark); }
+@media (max-width: 620px) { .form-grid { grid-template-columns: 1fr; } .form-group.full { grid-column: auto; } }
+
 /* ================= RESPONSIVE ================= */
 .mobile-menu { display: none; }
 
@@ -633,10 +785,10 @@ tbody tr:last-child td { border-bottom: 0; }
                     <p>View, search, add, edit and remove medicines from your pharmacy inventory.</p>
                 </div>
 
-                <a href="addDelete_Product.php" class="add-btn">
+                <button type="button" class="add-btn" id="openAddMedicine">
                     <i class="fa-solid fa-plus"></i>
                     Add Medicine
-                </a>
+                </button>
             </div>
 
             <!-- ================= STATS ================= -->
@@ -848,11 +1000,122 @@ tbody tr:last-child td { border-bottom: 0; }
         </section>
     </main>
 
+<!-- ================= ADD MEDICINE MODAL ================= -->
+<div class="modal-backdrop" id="addMedicineModal" aria-hidden="true">
+    <div class="add-modal" role="dialog" aria-modal="true" aria-labelledby="addMedicineTitle">
+        <div class="modal-head">
+            <div>
+                <h2 id="addMedicineTitle"><i class="fa-solid fa-pills"></i> Add New Medicine</h2>
+                <p>Add the medicine directly to your PharmacyX inventory.</p>
+            </div>
+            <button type="button" class="modal-close" id="closeAddMedicine" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="add-form">
+            <input type="hidden" name="add_medicine" value="1">
+
+            <?php if ($addError !== ''): ?>
+                <div class="alert-box alert-error"><i class="fa-solid fa-circle-exclamation"></i> <?php echo h($addError); ?></div>
+            <?php endif; ?>
+            <?php if ($addSuccess !== ''): ?>
+                <div class="alert-box alert-success"><i class="fa-solid fa-circle-check"></i> <?php echo h($addSuccess); ?></div>
+            <?php endif; ?>
+
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label for="product_name">Medicine Name *</label>
+                    <input id="product_name" name="product_name" type="text" maxlength="150" required placeholder="e.g. Paracetamol 500mg">
+                </div>
+
+                <div class="form-group full">
+                    <label for="product_description">Description</label>
+                    <textarea id="product_description" name="product_description" maxlength="1000" placeholder="Enter medicine description, usage information, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Selling Price (₹) *</label>
+                    <input id="price" name="price" type="number" min="0" step="0.01" required placeholder="200.00">
+                </div>
+
+                <div class="form-group">
+                    <label for="cost_price">Cost Price (₹)</label>
+                    <input id="cost_price" name="cost_price" type="number" min="0" step="0.01" value="0" placeholder="150.00">
+                </div>
+
+                <div class="form-group">
+                    <label for="stock_quantity">Stock Quantity *</label>
+                    <input id="stock_quantity" name="stock_quantity" type="number" min="0" step="1" required placeholder="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="expire_date">Expiry Date</label>
+                    <input id="expire_date" name="expire_date" type="date">
+                </div>
+
+                <div class="form-group">
+                    <label for="prescription_required">Prescription Required *</label>
+                    <select id="prescription_required" name="prescription_required" required>
+                        <option value="No">No - OTC Medicine</option>
+                        <option value="Yes">Yes - Prescription Required</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="medicine_image">Medicine Image</label>
+                    <input id="medicine_image" name="medicine_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+                    <span class="form-help">Optional. JPG, PNG, WEBP or GIF, maximum 5 MB.</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="cancel-btn" id="cancelAddMedicine">Cancel</button>
+                <button type="submit" class="save-btn"><i class="fa-solid fa-plus"></i> Add Medicine</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 (function () {
     const body = document.body;
     const button = document.getElementById('themeToggle');
     const icon = button.querySelector('i');
+
+    /* Add Medicine modal */
+    const addModal = document.getElementById('addMedicineModal');
+    const openAdd = document.getElementById('openAddMedicine');
+    const closeAdd = document.getElementById('closeAddMedicine');
+    const cancelAdd = document.getElementById('cancelAddMedicine');
+
+    function showAddModal() {
+        if (addModal) {
+            addModal.classList.add('show');
+            addModal.setAttribute('aria-hidden', 'false');
+            const nameInput = document.getElementById('product_name');
+            if (nameInput) nameInput.focus();
+        }
+    }
+
+    function hideAddModal() {
+        if (addModal) {
+            addModal.classList.remove('show');
+            addModal.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    if (openAdd) openAdd.addEventListener('click', showAddModal);
+    if (closeAdd) closeAdd.addEventListener('click', hideAddModal);
+    if (cancelAdd) cancelAdd.addEventListener('click', hideAddModal);
+    if (addModal) {
+        addModal.addEventListener('click', function (event) {
+            if (event.target === addModal) hideAddModal();
+        });
+    }
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') hideAddModal();
+    });
 
     const savedTheme = localStorage.getItem('pharmacyx_admin_theme');
 
@@ -871,6 +1134,10 @@ tbody tr:last-child td { border-bottom: 0; }
             ? 'fa-solid fa-sun'
             : 'fa-solid fa-moon';
     });
+
+    <?php if ($addError !== ''): ?>
+        showAddModal();
+    <?php endif; ?>
 })();
 </script>
 

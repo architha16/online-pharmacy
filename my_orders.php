@@ -17,6 +17,12 @@ CUSTOMER SESSION
 session_name("PHARMACYX_CUSTOMER");
 session_start();
 
+/* Prevent stale order/tracking pages */
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
+
 
 /*
 =========================================================
@@ -64,6 +70,62 @@ $userEscaped = mysqli_real_escape_string(
     $Connection,
     $user
 );
+
+
+/*
+=========================================================
+PRODUCT IMAGE PATH HELPER
+=========================================================
+
+The Products.image_url column may contain either:
+    medicine.png
+    Images/product-icons/medicine.png
+    ./Images/product-icons/medicine.png
+
+Always convert it to one correct browser path so the
+wrong/fallback medicine image is not displayed.
+=========================================================
+*/
+
+function pharmacyxProductImagePath($imageValue)
+{
+    $imageValue = trim((string)$imageValue);
+
+    $fallback = './Images/product-icons/Pharmacy-Isometric-Icons-1.png';
+
+    if ($imageValue === '') {
+        return $fallback;
+    }
+
+    // Allow a complete web URL if one is ever stored.
+    if (preg_match('#^(https?:)?//#i', $imageValue)) {
+        return $imageValue;
+    }
+
+    // Normalize Windows-style paths.
+    $imageValue = str_replace('\\', '/', $imageValue);
+
+    // Remove leading ./ so path checks are consistent.
+    while (strpos($imageValue, './') === 0) {
+        $imageValue = substr($imageValue, 2);
+    }
+
+    // Remove leading slash to keep the path relative to the project.
+    $imageValue = ltrim($imageValue, '/');
+
+    // If database already contains Images/... use it directly.
+    if (stripos($imageValue, 'Images/') === 0) {
+        return './' . $imageValue;
+    }
+
+    // If only product-icons/... was stored, add Images/.
+    if (stripos($imageValue, 'product-icons/') === 0) {
+        return './Images/' . $imageValue;
+    }
+
+    // Otherwise the database contains only the filename.
+    return './Images/product-icons/' . basename($imageValue);
+}
 
 
 /*
@@ -850,8 +912,7 @@ while ($order = mysqli_fetch_assoc($result)) {
 
 
     $imagePath =
-        "./Images/product-icons/" .
-        $image;
+        pharmacyxProductImagePath($image);
 
 
 ?>
@@ -1151,7 +1212,7 @@ while ($order = mysqli_fetch_assoc($result)) {
                 <a
 
                     class="btn track-btn"
-
+                    target="_self"
                     href="track_order.php?id=<?php
 
                         echo (int)$order['order_id'];
@@ -1269,7 +1330,7 @@ while ($order = mysqli_fetch_assoc($result)) {
             $prescriptionDescription = $prescription['product_description'] ?? 'Prescription medicine';
             $prescriptionPrice = (float)($prescription['price'] ?? 0);
             $prescriptionImage = trim($prescription['image_url'] ?? '');
-            $prescriptionImagePath = './Images/product-icons/' . $prescriptionImage;
+            $prescriptionImagePath = pharmacyxProductImagePath($prescriptionImage);
         ?>
 
         <div class="prescription-payment-card">
@@ -1320,7 +1381,7 @@ while ($order = mysqli_fetch_assoc($result)) {
                     </div>
 
                     <div class="buttons">
-                        <a class="btn pay-now-btn" href="prescription_status.php?continue_payment=<?php echo $prescriptionId; ?>">
+                        <a class="btn pay-now-btn" href="paymentpage.php?checkout_mode=buy_now&product_id=<?php echo (int)$prescription['product_id']; ?>&quantity=1&prescription_id=<?php echo $prescriptionId; ?>">
                             <i class="fa fa-credit-card"></i> Pay Now
                         </a>
                     </div>

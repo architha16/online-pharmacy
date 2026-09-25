@@ -1,18 +1,23 @@
 FROM php:8.0-apache
 
-# Install MySQL/MariaDB support for PHP
+# Install MySQL/MariaDB support
 RUN docker-php-ext-install mysqli
 
-# Apache: allow only ONE MPM module
-RUN a2dismod mpm_event mpm_worker mpm_auto mpm_prefork || true \
-    && a2enmod mpm_prefork \
-    && a2enmod rewrite
+# Remove every enabled Apache MPM configuration
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load \
+          /etc/apache2/mods-enabled/mpm_*.conf
 
-# Copy PharmacyX project into Apache web root
+# Enable only one MPM
+RUN a2enmod mpm_prefork rewrite
+
+# Verify Apache MPM configuration during Docker build
+RUN echo "===== APACHE MPM CHECK =====" \
+    && apachectl -M 2>&1 | grep mpm
+
+# Copy PharmacyX project
 COPY . /var/www/html/
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html
 
-# Apache listens on port 80
 EXPOSE 80

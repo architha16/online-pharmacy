@@ -1,0 +1,37 @@
+services:
+  pharmacyx:
+    build: .
+    container_name: pharmacyx-app
+    ports:
+      - "8081:80"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: pharmacyx_db
+      DB_USER: root
+      DB_PASSWORD: root
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0
+    command: --lower_case_table_names=1
+    container_name: pharmacyx-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: pharmacyx_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - pharmacyx_mysql_data:/var/lib/mysql
+      - ./Database/PharmacyX_DB.sql:/docker-entrypoint-initdb.d/PharmacyX_DB.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  pharmacyx_mysql_data:

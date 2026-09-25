@@ -1,4 +1,5 @@
 from test_products import login_as_customer
+from selenium.webdriver.common.by import By
 
 from pages.products_page import ProductsPage
 from pages.order_page import OrderPage
@@ -25,17 +26,41 @@ def open_payment_page(driver):
         "No Buy Now buttons are available."
     )
 
-    # Scroll to Buy Now button
+    # -------------------------------------------------
+    # FIND A NON-PRESCRIPTION MEDICINE
+    # -------------------------------------------------
+
+    non_prescription_button = None
+
+    for button in buy_buttons:
+
+        product_card = button.find_element(
+            By.XPATH,
+            "./ancestor::div[contains(@class, 'products-container')][1]"
+        )
+
+        if "Prescription Not Required" in product_card.text:
+            non_prescription_button = button
+            break
+
+    assert non_prescription_button is not None, (
+        "No non-prescription medicine is available."
+    )
+
+    # -------------------------------------------------
+    # CLICK BUY NOW
+    # -------------------------------------------------
+
     driver.execute_script(
         "arguments[0].scrollIntoView({block: 'center'});",
-        buy_buttons[0]
+        non_prescription_button
     )
 
     # JavaScript click to avoid
     # ElementClickInterceptedException
     driver.execute_script(
         "arguments[0].click();",
-        buy_buttons[0]
+        non_prescription_button
     )
 
     # -------------------------------------------------

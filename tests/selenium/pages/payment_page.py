@@ -171,7 +171,7 @@ class PaymentPage:
     def get_confirm_order_button(self):
         return self.driver.find_elements(
             By.CSS_SELECTOR,
-            "button[name='paynow']"
+            "button[type='submit'][name='paynow']"
         )
 
     # -------------------------------------------------

@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Oct 06, 2024 at 07:52 AM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.2.4
+-- Host: 127.0.0.1
+-- Generation Time: Sep 25, 2026 at 10:28 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,16 +18,41 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `PharmacyX_DB`
+-- Database: `pharmacyx_db`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Messages`
+-- Table structure for table `cart`
 --
 
-CREATE TABLE `Messages` (
+CREATE TABLE `cart` (
+  `cart_id` int(11) NOT NULL,
+  `user_name` varchar(100) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `product_name` varchar(255) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cart`
+--
+
+INSERT INTO `cart` (`cart_id`, `user_name`, `product_id`, `product_name`, `price`, `quantity`) VALUES
+(6, 'architha', 47, 'Telmisartan Tablets', 42.00, 1),
+(7, 'architha', 46, 'Ibuprofen Tablets', 25.00, 1),
+(8, 'architha', 45, 'Clotrimazole Cream', 150.00, 1),
+(9, 'architha', 44, 'Zinc Tablets', 185.00, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `messages`
+--
+
+CREATE TABLE `messages` (
   `message_id` int(11) NOT NULL,
   `user_name` varchar(100) DEFAULT NULL,
   `name` varchar(100) DEFAULT NULL,
@@ -39,62 +64,46 @@ CREATE TABLE `Messages` (
   `message_date` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `Messages`
---
-
-INSERT INTO `Messages` (`message_id`, `user_name`, `name`, `message_text`, `contact_no`, `email`, `Uploads_url`, `response_text`, `message_date`) VALUES
-(1, 'user01', 'kulanya', 'I want to know the availability of Paracetamol.', '0771234567', 'kulanya.lisaldi@gmail.com', NULL, NULL, '2024-09-17 06:01:22'),
-(2, 'user01', 'kulanya', 'Here is my prescription for the required medicines.', '0777654321', 'deshan.ggd@gmail.com', 'Prescription2.jpeg', NULL, '2024-09-17 06:01:22'),
-(3, 'user02', 'deshan', 'Can I get a discount on my next purchase?', '0712345678', 'group3@gmail.com', NULL, 'Yes, we are currently offering a 10% discount on all items.', '2024-09-17 06:01:22'),
-(4, 'user01', 'kulanya', 'I have attached my prescription for review. Please let me know the price.', '0771122334', 'johnson@gmail.com', 'prescription2.pdf', 'The total price is LKR 3,500.', '2024-09-17 06:01:22'),
-(6, 'user02', 'deshan', 'Can I change my delivery address after placing an order?', '0769876543', 'sliit@gmail.com', NULL, 'Yes, you can change your address within 24 hours of placing the order.', '2024-09-17 06:01:22'),
-(7, 'user02', 'deshan', 'Here is my lab report for the requested medicines.', '0753344556', 'dilshan@gmail.com', 'Prescription3.png', NULL, '2024-09-17 06:01:22'),
-(8, 'user02', 'deshan', 'Do you have insulin in stock?', '0742233445', 'nipun.munasingha@gmail.com', NULL, NULL, '2024-09-17 06:01:22'),
-(9, 'user02', 'deshan', 'How long does delivery take to Colombo?', '0719988776', 'reshan.perera@gmail.com', NULL, 'Deliveries to Colombo usually take 1-2 business days.', '2024-09-17 06:01:22'),
-(10, 'user01', 'kulanya', 'I have attached my prescription. Pls let me know if items  available.', '0774455667', 'samarasinghe@gmail.com', 'Prescription3.png', NULL, '2024-09-17 06:01:22');
-
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Orders`
+-- Table structure for table `orders`
 --
 
-CREATE TABLE `Orders` (
+CREATE TABLE `orders` (
   `order_id` int(11) NOT NULL,
   `user_name` varchar(100) DEFAULT NULL,
-  `order_status` enum('Pending','Shipped','Delivered') DEFAULT 'Pending',
+  `order_status` enum('Pending','Accepted','Packed','Out for Delivery','Delivered','Rejected') DEFAULT 'Pending',
   `order_type` enum('Prescription','General') DEFAULT NULL,
   `qty` int(11) DEFAULT NULL,
   `receiver_name` varchar(255) DEFAULT NULL,
   `street` varchar(100) DEFAULT NULL,
   `city` varchar(100) DEFAULT NULL,
   `postal_code` varchar(10) DEFAULT NULL,
+  `prescription_id` int(11) DEFAULT NULL,
   `prescription_url` varchar(255) DEFAULT NULL,
   `product_id` int(11) DEFAULT NULL,
   `Order_total` decimal(10,2) DEFAULT NULL,
-  `order_date` timestamp NOT NULL DEFAULT current_timestamp()
+  `payment_method` varchar(50) DEFAULT 'COD',
+  `order_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `rejection_reason` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `Orders`
+-- Dumping data for table `orders`
 --
 
-INSERT INTO `Orders` (`order_id`, `user_name`, `order_status`, `order_type`, `qty`, `receiver_name`, `street`, `city`, `postal_code`, `prescription_url`, `product_id`, `Order_total`, `order_date`) VALUES
-(1, 'user01', 'Pending', 'Prescription', 2, 'Kulanya Lisaldi', '123 Galle Road', 'Colombo', '00100', 'Prescription3.png', 2, 800.00, '2024-09-17 12:42:40'),
-(2, 'user01', 'Pending', 'General', 1, 'Kulanya Lisaldi', '456 Marine Drive', 'Galle', '80000', NULL, 4, 4500.00, '2024-09-17 12:42:40'),
-(3, 'user01', 'Shipped', 'Prescription', 3, 'Kulanya Lisaldi', '789 Kandy Street', 'Kandy', '20000', 'Prescription2.jpeg', 5, 150.00, '2024-09-17 12:42:40'),
-(4, 'user02', 'Shipped', 'General', 4, 'Deshan GGD', '25 Temple Road', 'Negombo', '11500', NULL, 1, 600.00, '2024-09-17 12:42:40'),
-(5, 'user02', 'Shipped', 'Prescription', 2, 'Deshan GGD', '18 Beach Road', 'Matara', '81000', 'Prescription1.png', 3, 400.00, '2024-09-17 12:42:40'),
-(15, 'user01', 'Pending', 'General', 1, 'Moditha Marasingha', 'Somi Kelum', 'Kegalle', '71220', NULL, 4, 4500.00, '2024-10-01 18:29:29');
+INSERT INTO `orders` (`order_id`, `user_name`, `order_status`, `order_type`, `qty`, `receiver_name`, `street`, `city`, `postal_code`, `prescription_id`, `prescription_url`, `product_id`, `Order_total`, `payment_method`, `order_date`, `rejection_reason`) VALUES
+(3, 'architha', 'Delivered', 'General', 1, 'sahasra reddy', 'pragathi nagar', 'hyderabad', '505001', 14, '1789488996_6aa96f6452c97_R.jpg', 47, 92.00, 'COD', '2026-09-15 16:28:59', NULL),
+(4, 'architha', 'Packed', 'General', 1, 'sahasra reddy', 'pragathi nagar', 'hyderabad', '505001', 15, '1789493738_6aa981ea93f1a_R.jpg', 47, 92.00, 'COD', '2026-09-15 17:36:40', NULL);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Payment`
+-- Table structure for table `payment`
 --
 
-CREATE TABLE `Payment` (
+CREATE TABLE `payment` (
   `payment_id` int(11) NOT NULL,
   `order_id` int(11) DEFAULT NULL,
   `amount` decimal(10,2) DEFAULT NULL,
@@ -104,52 +113,92 @@ CREATE TABLE `Payment` (
   `receipt_url` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `Payment`
+-- Table structure for table `prescriptions`
 --
 
-INSERT INTO `Payment` (`payment_id`, `order_id`, `amount`, `bank`, `remark`, `payment_date`, `receipt_url`) VALUES
-(2, 2, 4500.00, NULL, NULL, '2024-09-14 03:45:00', 'receipt2.pdf'),
-(3, 3, 150.00, NULL, NULL, '2024-09-13 09:15:00', 'receipt3.pdf'),
-(4, 4, 600.00, NULL, NULL, '2024-09-15 05:50:00', 'receipt4.pdf'),
-(5, 5, 400.00, NULL, NULL, '2024-09-14 03:00:00', 'receipt5.pdf'),
-(6, 15, 4500.00, 'BOC', 'test 1234', '2024-10-01 18:29:46', 'IC-Payment-Receipt-11290_PDF.pdf');
+CREATE TABLE `prescriptions` (
+  `id` int(11) NOT NULL,
+  `user_name` varchar(100) DEFAULT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `patient_name` varchar(100) NOT NULL,
+  `mobile` varchar(20) NOT NULL,
+  `prescription_file` varchar(255) NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Pending',
+  `rejection_reason` text DEFAULT NULL,
+  `recommended_medicines` text DEFAULT NULL,
+  `upload_date` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `prescriptions`
+--
+
+INSERT INTO `prescriptions` (`id`, `user_name`, `product_id`, `patient_name`, `mobile`, `prescription_file`, `status`, `rejection_reason`, `recommended_medicines`, `upload_date`) VALUES
+(14, 'architha', 47, 'archi tha', '9963963309', '1789488996_6aa96f6452c97_R.jpg', 'Approved', NULL, NULL, '2026-09-15 16:16:36'),
+(15, 'architha', 47, 'archi tha', '9963963309', '1789493738_6aa981ea93f1a_R.jpg', 'Approved', NULL, NULL, '2026-09-15 17:35:38'),
+(16, 'architha', 47, 'archi tha', '9963963309', '1789545063_6aaa4a674e881_d-1.jpg', 'Approved', NULL, NULL, '2026-09-16 07:51:03');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Products`
+-- Table structure for table `products`
 --
 
-CREATE TABLE `Products` (
+CREATE TABLE `products` (
   `product_id` int(11) NOT NULL,
   `product_name` varchar(255) NOT NULL,
   `product_description` text DEFAULT NULL,
   `price` decimal(10,2) NOT NULL,
+  `cost_price` decimal(10,2) NOT NULL DEFAULT 0.00,
   `stock_quantity` int(11) NOT NULL,
   `image_url` varchar(255) DEFAULT NULL,
-  `expire_date` date NOT NULL
+  `expire_date` date NOT NULL,
+  `prescription_required` enum('Yes','No') NOT NULL DEFAULT 'No'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `Products`
+-- Dumping data for table `products`
 --
 
-INSERT INTO `Products` (`product_id`, `product_name`, `product_description`, `price`, `stock_quantity`, `image_url`, `expire_date`) VALUES
-(1, 'Paracetamol', 'Effective pain relief for headaches and fever. 500mg tablets.', 150.00, 100, 'Pharmacy-Isometric-Icons-2.png', '0000-00-00'),
-(2, 'Amoxicillin', 'Antibiotic used to treat bacterial infections. 250mg capsules.', 600.00, 50, 'Pharmacy-Isometric-Icons-3.png', '0000-00-00'),
-(3, 'Vitamin C Tablets', 'Boost your immune system with Vitamin C. 1000mg tablets.', 200.00, 100, 'Pharmacy-Isometric-Icons-9.png', '0000-00-00'),
-(4, 'Blood Pressure Monitor', 'Accurate and easy-to-use blood pressure monitor.', 2500.00, 30, 'Pharmacy-Isometric-Icons-5.png', '0000-00-00'),
-(5, 'Insulin Syringe', 'Disposable insulin syringes with fine needles.', 50.00, 500, 'Pharmacy-Isometric-Icons-4.png', '0000-00-00'),
-(26, 'Vitamin E Capsules', 'Best For Hair Growth and Skin. Low Price', 30.00, 70, 'vitamin E.webp', '2025-03-04');
+INSERT INTO `products` (`product_id`, `product_name`, `product_description`, `price`, `cost_price`, `stock_quantity`, `image_url`, `expire_date`, `prescription_required`) VALUES
+(1, 'Paracetamol', 'Effective pain relief for headaches and fever. 500mg tablets.', 150.00, 0.00, 100, '1787743293_9580.webp', '2027-08-03', 'No'),
+(2, 'Amoxicillin', 'Antibiotic used to treat bacterial infections. 250mg capsules.', 600.00, 0.00, 47, '1787743244_2614.webp', '2027-08-03', 'No'),
+(3, 'Vitamin C Tablets', 'Boost your immune system with Vitamin C. 1000mg tablets.', 15.00, 0.00, 100, '1787743116_7340.webp', '2027-08-03', 'No'),
+(4, 'Blood Pressure Monitor', 'Accurate and easy-to-use blood pressure monitor.', 2500.00, 0.00, 27, '1787742876_7894.jpg', '2027-08-03', 'Yes'),
+(5, 'Insulin Syringe', 'Disposable insulin syringes with fine needles.', 50.00, 0.00, 499, '1787742816_1956.jpg', '2027-08-03', 'No'),
+(26, 'Vitamin E Capsules', 'Best For Hair Growth and Skin. Low Price', 30.00, 0.00, 70, '1787743178_8971.jpg', '2027-03-03', 'No'),
+(27, 'Cough Syrup', 'Helps relieve cough and soothe throat irritation.', 150.00, 0.00, 98, '61DYD3i7WrL._SL1280_.jpg', '2026-11-08', 'Yes'),
+(28, 'Antacid Suspension', 'Helps relieve acidity, heartburn, and indigestion.', 400.00, 0.00, 230, 'Antacid Suspension_EN.png', '2028-11-08', 'No'),
+(29, 'Paracetamol Syrup', 'Used to reduce fever and relieve mild-to-moderate pain.', 200.00, 0.00, 100, 'OIP.webp', '2028-11-08', 'No'),
+(30, 'Azithromycin Tablets', 'An antibiotic used to treat certain bacterial infections. \r\nUses: Used for bacterial infections such as respiratory and throat infections.', 100.00, 90.00, 100, 'Images/product-icons/medicine_1788976402_36140034.webp', '2028-11-08', 'Yes'),
+(31, 'Cefixime Tablets', 'Antibiotic used to treat certain bacterial infections', 200.00, 180.00, 100, 'Images/product-icons/medicine_1788976709_53e54952.webp', '2028-11-08', 'Yes'),
+(32, 'Ciprofloxacin Tablets', 'Antibiotic used for certain bacterial infections', 200.00, 150.00, 20, 'Images/product-icons/medicine_1788976911_0e970144.webp', '2026-12-22', 'Yes'),
+(33, 'Metformin Tablets', 'Medicine used to help control blood glucose levels.', 250.00, 150.00, 50, 'Images/product-icons/medicine_1788977253_be87e75c.webp', '2027-12-30', 'Yes'),
+(34, 'Amlodipine Tablets', 'Medicine used to help lower blood pressure', 500.00, 400.00, 60, 'Images/product-icons/medicine_1788977400_55c20e37.webp', '2027-11-25', 'Yes'),
+(35, 'Losartan Tablets', 'Medicine used to help control high blood pressure', 300.00, 250.00, 70, 'Images/product-icons/medicine_1788977581_7641ee7f.webp', '2027-06-20', 'Yes'),
+(36, 'Pantoprazole Tablet', 'Medicine that reduces stomach-acid production.', 350.00, 150.00, 80, 'Images/product-icons/medicine_1788977734_779c5cc7.webp', '2027-12-31', 'Yes'),
+(37, 'Montelukast Tablets', 'Medicine used to help manage asthma and certain allergies', 450.00, 300.00, 70, 'Images/product-icons/medicine_1788977905_e3c82592.webp', '2027-10-15', 'Yes'),
+(38, 'Glimepiride Tablets', 'Medicine used to help control blood glucose levels', 200.00, 100.00, 90, 'Images/product-icons/medicine_1788978046_dc4c27b7.webp', '2028-06-12', 'Yes'),
+(39, 'Levothyroxine Tablet', 'Thyroid-hormone replacement medicine', 200.00, 90.00, 65, 'Images/product-icons/medicine_1788978200_57115363.webp', '2027-10-10', 'Yes'),
+(40, 'ORS Sachet', 'Oral rehydration powder used to replace fluids and electrolytes lost during dehydration.', 20.00, 16.00, 100, 'Images/product-icons/medicine_1788978737_9d818886.webp', '2027-01-30', 'No'),
+(41, 'Cetirizine Tablet', 'Antihistamine medicine used to relieve common allergy symptoms', 150.00, 85.00, 100, 'Images/product-icons/medicine_1788978930_cb2a9b7d.webp', '2027-08-31', 'No'),
+(42, 'Calamine Lotion', 'Soothing skin lotion that helps relieve itching and irritation', 300.00, 150.00, 75, 'Images/product-icons/medicine_1788979043_40ad5100.webp', '2027-07-21', 'No'),
+(43, 'Antiseptic Solution', 'Antiseptic liquid used for cleaning and protecting minor cuts and wounds', 150.00, 100.00, 85, 'Images/product-icons/medicine_1788979157_178ef3bf.webp', '2028-12-31', 'No'),
+(44, 'Zinc Tablets', 'Zinc supplement used to help prevent or treat zinc deficiency', 185.00, 120.00, 50, 'Images/product-icons/medicine_1788979321_bf8eef52.webp', '2027-06-25', 'No'),
+(45, 'Clotrimazole Cream', 'Antiseptic liquid used for cleaning and protecting minor cuts and wounds', 150.00, 80.00, 30, 'Images/product-icons/medicine_1788979471_9602d164.webp', '2027-08-21', 'No'),
+(46, 'Ibuprofen Tablets', 'Pain-relieving medicine used for temporary relief of mild pain and inflammation.', 25.00, 18.00, 9, 'Images/product-icons/medicine_1788980078_71147889.webp', '2027-11-09', 'No'),
+(47, 'Telmisartan Tablets', 'Medicine used to lower blood pressure by helping blood vessels relax.', 42.00, 30.00, 7, 'Images/product-icons/medicine_1788980258_027b0d82.webp', '2027-11-08', 'Yes');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `User_info`
+-- Table structure for table `user_info`
 --
 
-CREATE TABLE `User_info` (
+CREATE TABLE `user_info` (
   `user_name` varchar(100) NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
@@ -158,58 +207,68 @@ CREATE TABLE `User_info` (
   `password` varchar(255) NOT NULL,
   `profilepic_url` varchar(255) DEFAULT NULL,
   `acc_status` enum('Active','Inactive') DEFAULT 'Active',
-  `user_type` enum('Admin','Manager','Customer') DEFAULT NULL
+  `user_type` enum('Admin','Manager','Pharmacist','Customer') DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `User_info`
+-- Dumping data for table `user_info`
 --
 
-INSERT INTO `User_info` (`user_name`, `first_name`, `last_name`, `email`, `phone_no`, `password`, `profilepic_url`, `acc_status`, `user_type`) VALUES
+INSERT INTO `user_info` (`user_name`, `first_name`, `last_name`, `email`, `phone_no`, `password`, `profilepic_url`, `acc_status`, `user_type`) VALUES
 ('admin01', 'Moditha', 'Marasingha', 'moditha2003@gmail.com', '0716899555', 'mod123', 'WhatsApp Image 2023-10-02 at 8.12.10 PM.jpeg', 'Active', 'Admin'),
+('architha', 'archi', 'tha', 'archi@gamil.com', NULL, 'architha@08', NULL, 'Active', 'Customer'),
 ('manager01', 'Hasindu', 'Sankalpa', 'sam.wilson@pharmacyx.com', '0772245566', 'managerPass02', 'propic4.jpeg', 'Active', 'Manager'),
 ('manager02', 'Medhani', 'Paboda', 'medhani@gmail.com', NULL, 'managerPass03', 'propic2.png', 'Active', 'Manager'),
-('Nipun12', 'Nipun', 'Munasingha', 'nipun@gmail.com', NULL, '1234', NULL, 'Active', 'Customer'),
-('ThimiraT', 'Thimira', 'Thathsarana', 'thimira@gmail.com', '0774545787', 'Thimira1234', NULL, 'Inactive', 'Customer'),
-('user01', 'Kulanya', 'Lisaldi', 'alice.johnson@gmail.com', '1234567891', 'userPass01', 'propic5.jpeg', 'Active', 'Customer'),
-('user02', 'Deshan', 'GGD', 'bob.williams@gmail.com', '0774545787', 'userPass02', 'propic1.jpg', 'Active', 'Customer');
+('pharmacist01', 'Test', 'Pharmacist', 'pharmacist@test.com', NULL, '123456', NULL, 'Active', 'Pharmacist');
 
 --
 -- Indexes for dumped tables
 --
 
 --
--- Indexes for table `Messages`
+-- Indexes for table `cart`
 --
-ALTER TABLE `Messages`
+ALTER TABLE `cart`
+  ADD PRIMARY KEY (`cart_id`);
+
+--
+-- Indexes for table `messages`
+--
+ALTER TABLE `messages`
   ADD PRIMARY KEY (`message_id`),
   ADD KEY `fk_user_name` (`user_name`);
 
 --
--- Indexes for table `Orders`
+-- Indexes for table `orders`
 --
-ALTER TABLE `Orders`
+ALTER TABLE `orders`
   ADD PRIMARY KEY (`order_id`),
   ADD KEY `user_name` (`user_name`),
   ADD KEY `fk_product` (`product_id`);
 
 --
--- Indexes for table `Payment`
+-- Indexes for table `payment`
 --
-ALTER TABLE `Payment`
+ALTER TABLE `payment`
   ADD PRIMARY KEY (`payment_id`),
   ADD KEY `order_id` (`order_id`);
 
 --
--- Indexes for table `Products`
+-- Indexes for table `prescriptions`
 --
-ALTER TABLE `Products`
+ALTER TABLE `prescriptions`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `products`
+--
+ALTER TABLE `products`
   ADD PRIMARY KEY (`product_id`);
 
 --
--- Indexes for table `User_info`
+-- Indexes for table `user_info`
 --
-ALTER TABLE `User_info`
+ALTER TABLE `user_info`
   ADD PRIMARY KEY (`user_name`),
   ADD UNIQUE KEY `email` (`email`);
 
@@ -218,51 +277,63 @@ ALTER TABLE `User_info`
 --
 
 --
--- AUTO_INCREMENT for table `Messages`
+-- AUTO_INCREMENT for table `cart`
 --
-ALTER TABLE `Messages`
-  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+ALTER TABLE `cart`
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
--- AUTO_INCREMENT for table `Orders`
+-- AUTO_INCREMENT for table `messages`
 --
-ALTER TABLE `Orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+ALTER TABLE `messages`
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `Payment`
+-- AUTO_INCREMENT for table `orders`
 --
-ALTER TABLE `Payment`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+ALTER TABLE `orders`
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT for table `Products`
+-- AUTO_INCREMENT for table `payment`
 --
-ALTER TABLE `Products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+ALTER TABLE `payment`
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `prescriptions`
+--
+ALTER TABLE `prescriptions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `products`
+--
+ALTER TABLE `products`
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- Constraints for dumped tables
 --
 
 --
--- Constraints for table `Messages`
+-- Constraints for table `messages`
 --
-ALTER TABLE `Messages`
-  ADD CONSTRAINT `fk_user_name` FOREIGN KEY (`user_name`) REFERENCES `User_info` (`user_name`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `messages`
+  ADD CONSTRAINT `fk_user_name` FOREIGN KEY (`user_name`) REFERENCES `user_info` (`user_name`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `Orders`
+-- Constraints for table `orders`
 --
-ALTER TABLE `Orders`
-  ADD CONSTRAINT `fk_product` FOREIGN KEY (`product_id`) REFERENCES `Products` (`product_id`),
-  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_name`) REFERENCES `User_info` (`user_name`);
+ALTER TABLE `orders`
+  ADD CONSTRAINT `fk_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`),
+  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_name`) REFERENCES `user_info` (`user_name`);
 
 --
--- Constraints for table `Payment`
+-- Constraints for table `payment`
 --
-ALTER TABLE `Payment`
-  ADD CONSTRAINT `payment_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `Orders` (`order_id`);
+ALTER TABLE `payment`
+  ADD CONSTRAINT `payment_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

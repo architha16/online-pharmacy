@@ -64,15 +64,15 @@ session_start();
     <div class="slides">
 
         <img class="slide"
-             src="images/slide01.jpg"
+             src="./Images/slide01.jpg"
              alt="">
 
         <img class="slide"
-             src="images/slide02.jpg"
+             src="./Images/slide02.jpg"
              alt="">
 
         <img class="slide"
-             src="images/slide03.jpg"
+             src="./Images/slide03.jpg"
              alt="">
 
     </div>
@@ -541,9 +541,8 @@ session_start();
 <?php include("./footer.php"); ?>
 
 
-<script src="./js/index.js"></script>
+<script src="./JS/index.js"></script>
 
 
 </body>
-
 </html>
